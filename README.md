@@ -2,6 +2,26 @@
 
 Launch assets for HooCode (`hoocode`, a terminal coding agent). The pipeline runs in three steps: record the terminal demo, render the 45s trailer around it, then render the 15s teaser.
 
+## v2 (launch films with original score)
+
+Everything for v2 lives in `v2/`; the finished films are committed in `out/v2/`.
+
+| File | What it is |
+|---|---|
+| `out/v2/hoocode-trailer-60s.mp4` | 60 s trailer, 1920x1080, with score and SFX |
+| `out/v2/hoocode-trailer-30s.mp4` | 30 s cutdown, 1920x1080 |
+| `out/v2/hoocode-teaser-{9x16,1x1,16x9}.mp4` | 15 s teaser in three aspects (+ `-poster.png`) |
+| `out/v2/hoocode-v2.mp4` | the 1080p demo recording (4K master is rebuilt by `v2/recording/`) |
+
+Pipeline (each step has a README in its folder):
+
+1. **Direction**: `v2/direction.md` (concept "Plans. Asks. Tests. Lands."), shot lists `v2/trailer-60.md`, `v2/cutdown-30.md`, `v2/teaser-15.md`.
+2. **Recording**: `v2/recording/` records an asciinema cast of the real `hoocode` binary against the scripted model, then renders it to 4K/30 fps with xterm.js (`render_cast.mjs`) and writes exact cue times to `cues.json`.
+3. **Score**: `v2/music/` synthesizes the original score in Python (no samples): `python3 v2/music/score.py --film <trailer60|cutdown30|teaser15> --events v2/<film>/events.json`. Spec in `v2/score.md`.
+4. **Films**: HyperFrames projects in `v2/trailer60/`, `v2/cutdown30/`, `v2/teaser15/{9x16,1x1,16x9}/`. Each `build.py` turns `cues.json` into the edit, the SFX `events.json` and the timing block, so picture and sound cannot drift. Render, then mux with the score WAV.
+
+Brand marks in `v2/assets/brand/` are copied from `hoo-brand/assets/`.
+
 ## Folders
 
 | Path | What it is |

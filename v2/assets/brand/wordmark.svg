@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80" width="160" height="80" role="img" aria-labelledby="hoo-wordmark-title">
+  <title id="hoo-wordmark-title">Hoo master wordmark</title>
+  <rect width="160" height="80" rx="16" fill="#09090B"/>
+  <line x1="30" y1="24" x2="30" y2="56" stroke="#FAFAFA" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 30,42 A 12,12 0 0 1 54,42 L 54,56" fill="none" stroke="#FAFAFA" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="71" cy="44" r="12" fill="none" stroke="#FAFAFA" stroke-width="4"/>
+  <circle cx="95" cy="44" r="12" fill="none" stroke="#FAFAFA" stroke-width="4"/>
+  <polygon points="83,41 86,44 83,47 80,44" fill="#00F0FF"/>
+  <path d="M 112,32 A 16,16 0 0 1 112,56" fill="none" stroke="#00F0FF" stroke-width="3" stroke-linecap="round"/>
+</svg>

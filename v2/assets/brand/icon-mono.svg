@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-labelledby="hoo-mono-title">
+  <title id="hoo-mono-title">Hoo monogram — app icon</title>
+  <rect width="200" height="200" rx="40" fill="#09090B"/>
+  <line x1="64" y1="48" x2="64" y2="156" stroke="#FAFAFA" stroke-width="14" stroke-linecap="round"/>
+  <path d="M64,104 A30,30 0 0 1 124,104 L124,156" fill="none" stroke="#FAFAFA" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="94" cy="126" r="11" fill="#00F0FF"/>
+</svg>
