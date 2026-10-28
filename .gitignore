@@ -4,6 +4,14 @@ out/*
 !out/hoocode.mp4
 !out/hoocode.gif
 !out/trailer.mp4
+# v2 deliverables
+!out/v2/
+out/v2/*
+!out/v2/hoocode-trailer-60s.mp4
+!out/v2/hoocode-trailer-30s.mp4
+!out/v2/hoocode-teaser-*.mp4
+!out/v2/hoocode-teaser-*-poster.png
+!out/v2/hoocode-v2.mp4
 
 # Recording sample repo: build output
 recording/sample-repo/target
