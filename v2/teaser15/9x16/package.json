@@ -1,0 +1,10 @@
+{
+  "name": "hoocode-teaser-9x16",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.8.210 preview",
+    "check": "npx --yes hyperframes@0.8.210 check",
+    "render": "npx --yes hyperframes@0.8.210 render --output ../../../out/v2/teaser-9x16-silent.mp4 --fps 30 --quality high"
+  }
+}

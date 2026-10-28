@@ -1,0 +1,110 @@
+/* Shared styles for the v2 trailer (v2/trailer60) and cutdown (v2/cutdown30).
+   Linked into each project as assets/filmkit.css. Brand tokens only (direction.md section 2). */
+@font-face { font-family: "Inter"; src: url("fonts/Inter-var.woff") format("woff"); font-weight: 100 900; font-display: block; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono-latin-400-normal.woff") format("woff"); font-weight: 400; font-display: block; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono-latin-500-normal.woff") format("woff"); font-weight: 500; font-display: block; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono-latin-700-normal.woff") format("woff"); font-weight: 700; font-display: block; }
+
+:root {
+  --signal: #00F0FF;
+  --signal-dim: rgba(0, 240, 255, 0.15);
+  --signal-glow: rgba(0, 240, 255, 0.40);
+  --base: #09090B;
+  --panel: #18181B;
+  --rule: #27272A;
+  --ink: #FAFAFA;
+  --ink-2: #E4E4E7;
+  --muted: #A1A1AA;
+  --faint: #71717A;
+  --sans: "Inter", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--base); }
+#stage {
+  position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden;
+  background: var(--base); color: var(--ink); font-family: var(--sans);
+  -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision;
+}
+.scene { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--base); }
+.c { color: var(--signal); }
+.f { color: var(--faint); }
+.m { color: var(--muted); }
+.ch { visibility: hidden; }
+.mono { font-family: var(--mono); }
+
+/* ---- cold open: owl + banner ---- */
+.open-row { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: flex; align-items: center; justify-content: center; gap: 72px; }
+.owl { display: block; overflow: visible; }
+.banner { display: flex; flex-direction: column; gap: 28px; }
+.banner-name { font: 700 96px/1 var(--mono); letter-spacing: 0; white-space: pre; display: flex; align-items: center; }
+.banner-name .div { display: inline-block; width: 0.6em; height: 1em; position: relative; }
+.banner-name .div::after { content: ""; position: absolute; left: calc(50% - 2px); top: 0.06em; width: 4px; height: 0.9em; background: var(--faint); }
+.banner-sub { font: 500 36px/1 var(--mono); color: var(--faint); white-space: pre; }
+
+/* ---- typed task ---- */
+.typed { position: absolute; font: 500 52px/1 var(--mono); white-space: pre; color: var(--ink); }
+.cursor { position: absolute; top: 0; width: 0.6em; height: 1em; }
+.cursor::after { content: ""; position: absolute; left: 0.04em; right: 0.04em; bottom: 0.02em; height: 0.12em; background: var(--signal); }
+
+/* ---- footage ---- */
+.cam { position: absolute; left: 0; top: 0; width: 3840px; height: 2160px; transform-origin: 0 0; }
+.cam video { position: absolute; left: 0; top: 0; width: 3840px; height: 2160px; display: block; object-fit: fill; background: var(--base); }
+.br { position: absolute; left: 0; top: 0; width: 100px; height: 100px; visibility: hidden; opacity: 0; pointer-events: none; filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.40)); }
+.br i { position: absolute; width: 28px; height: 28px; border: 0 solid var(--signal); }
+.br .a { left: 0; top: 0; border-top-width: 3px; border-left-width: 3px; }
+.br .b { right: 0; top: 0; border-top-width: 3px; border-right-width: 3px; }
+.br .c2 { left: 0; bottom: 0; border-bottom-width: 3px; border-left-width: 3px; }
+.br .d { right: 0; bottom: 0; border-bottom-width: 3px; border-right-width: 3px; }
+.verb {
+  position: absolute; visibility: hidden; white-space: pre;
+  padding: 18px 52px 34px; background: rgba(9, 9, 11, 0.88); border: 1px solid var(--rule); border-radius: 20px;
+  font: 800 168px/1 var(--sans); letter-spacing: -0.04em; color: var(--ink);
+}
+.verb .c { letter-spacing: 0; }
+.kc {
+  position: absolute; visibility: hidden; display: flex; align-items: center; gap: 28px;
+  padding: 18px 36px 18px 18px; background: rgba(9, 9, 11, 0.88); border: 1px solid var(--rule); border-radius: 20px;
+  white-space: pre;
+}
+.kc .cap {
+  width: 104px; height: 104px; border-radius: 12px; background: var(--panel); border: 2px solid var(--rule);
+  display: flex; align-items: center; justify-content: center; font: 700 64px/1 var(--mono); color: var(--signal);
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.45);
+}
+.kc .cap span { display: block; transform: translateY(-3px); }
+.kc .lbl { font: 500 30px/1 var(--mono); color: var(--muted); }
+.spark { position: absolute; width: 30px; height: 30px; left: -13px; top: -13px; overflow: visible; visibility: hidden; }
+
+/* ---- brand cards ---- */
+.glow-field { position: absolute; inset: 0; background: radial-gradient(circle at 30% 20%, rgba(0, 240, 255, 0.06) 0%, transparent 50%); }
+.center-col { position: absolute; left: 0; width: 1920px; text-align: center; }
+.headline { font: 700 80px/1.1 var(--sans); letter-spacing: -0.04em; color: var(--ink); }
+.legend { font: 500 36px/1 var(--mono); color: var(--muted); white-space: pre; }
+.legend .k { color: var(--signal); font-weight: 700; }
+.legend .s { color: var(--faint); }
+.verbs { position: absolute; left: 480px; top: 270px; }
+.verbs div { font: 800 120px/1.1 var(--sans); letter-spacing: -0.04em; color: var(--ink); visibility: hidden; white-space: pre; }
+.verbs div.dim, .verbs div.dim .c { color: var(--faint); }
+
+/* ---- feature cards ---- */
+.fpanel {
+  position: absolute; left: 240px; top: 260px; width: 1440px; height: 560px; border-radius: 20px;
+  background: radial-gradient(circle at 30% 20%, rgba(0, 240, 255, 0.15) 0%, transparent 50%), var(--panel);
+  border: 1px solid var(--rule); overflow: hidden;
+}
+.fpanel .lab { position: absolute; left: 96px; top: 116px; font: 500 22px/1 var(--mono); letter-spacing: 0.12em; color: var(--faint); text-transform: uppercase; }
+.fpanel .hed { position: absolute; left: 96px; top: 188px; font: 700 80px/1.1 var(--sans); letter-spacing: -0.04em; color: var(--ink); white-space: pre; }
+.fpanel .det { position: absolute; left: 96px; top: 350px; font: 500 36px/1.45 var(--mono); color: var(--muted); white-space: pre; }
+.fpanel .sym { position: absolute; right: 96px; top: 104px; width: 140px; height: 67px; overflow: visible; }
+
+/* ---- lockup / install / end ---- */
+.lockup { position: absolute; left: 410px; top: 310px; width: 1100px; height: 321px; overflow: visible; transform-origin: 50% 50%; }
+.tagline { position: absolute; left: 0; top: 720px; width: 1920px; text-align: center; font: 700 64px/1.1 var(--sans); letter-spacing: -0.03em; color: var(--ink); visibility: hidden; }
+.install { position: absolute; left: 240px; top: 430px; width: 1440px; height: 128px; border-radius: 20px; background: var(--panel); border: 1px solid var(--rule); visibility: hidden; }
+.install .line { position: absolute; left: 64px; top: 46px; font: 500 32px/1 var(--mono); color: var(--ink); white-space: pre; }
+.endline { position: absolute; left: 0; width: 1920px; text-align: center; white-space: pre; visibility: hidden; }
+.alt { top: 612px; font: 500 30px/1 var(--mono); color: var(--muted); }
+.plat { top: 668px; font: 500 24px/1 var(--mono); color: var(--faint); letter-spacing: 0.04em; }
+.url { top: 850px; font: 500 36px/1 var(--sans); color: var(--muted); letter-spacing: -0.01em; }
+.url b { font-weight: 600; color: var(--ink); }
