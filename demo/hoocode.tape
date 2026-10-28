@@ -1,24 +1,20 @@
 # =====================================================================
 # HooCode launch demo: VHS tape (https://github.com/charmbracelet/vhs)
 #
-# Run from the repo root:   vhs demo/hoocode.tape
-# Needs: VHS >= 0.8 (for Wait+Screen), ttyd, ffmpeg, and `hoo` on PATH.
-# Output dir must exist:    mkdir -p demo/out
+# Record (from the repo root, with a HooCode binary built from the clone):
+#   HOOCODE_BIN=/home/user/kolisachint/hoocode/target/release/hoocode vhs demo/hoocode.tape
 #
-# ---- EDITABLE VALUES (all PLACEHOLDERS, see demo/README.md TODO list) ----
-# Binary name:         hoo                       (TODO: confirm)
-# Sample repo:         demo/sample-repo          (TODO: create it; not in repo yet)
-# Task 1 prompt:       Add a --json output flag to the stats command
-# Task 2 (agent):      approve the plan with Enter; agent edits files, runs cargo test
-# Task 3 prompt:       Open a pull request with these changes
-# Quit key:            Ctrl+C                    (TODO: confirm real quit key)
-# Screen strings we wait on: "Plan", "tests passed", "Pull request"  (TODO: confirm)
-# Version shown in outro (film only): v0.1.25    (TODO: confirm)
+# The run is deterministic: `hoocode` here is demo/run-mock.sh, which starts the
+# scripted mock LLM (scripts/tui/mockllm.py, turns in demo/scenario.json) and runs the
+# real binary against it in demo/sample-repo. Nothing is sent to a real model.
+# demo/reset-sample.sh restores the sample repo first, so every recording starts the same.
 #
-# ---- TIMING MAP ----
-# Clip time c maps to film time 9 + c (storyboard: VHS clip runs 0:09-0:36).
-# The clip is ~25s of footage; the film holds the last frame for the rest.
-# Wait+Screen durations vary by machine, so the clip times below are targets.
+# Needs: VHS >= 0.8 (Wait+Screen), ttyd, ffmpeg, bash, cargo, python3.
+# Output dir must exist: mkdir -p demo/out
+#
+# Timing map: clip time c is film time 9 + c (see demo/storyboard.md). The clip times in
+# the comments are estimates until the first real recording; the film's caption times are
+# set in film/index.html. The Wait+Screen timeouts are generous.
 # =====================================================================
 
 Output demo/out/hoocode.mp4
@@ -28,52 +24,50 @@ Set Shell "bash"
 Set FontSize 22
 Set Width 1600
 Set Height 900
-Set Theme "Catppuccin Mocha"
-Set TypingSpeed 45ms
 Set Padding 24
 Set WindowBar Colorful
-
-Require hoo
+Set TypingSpeed 45ms
+# dark.json (crates/hoocode-code-tui-theme/themes/dark.json) on the brand background #09090B.
+Set Theme { "name": "HooCode dark", "background": "#09090B", "foreground": "#FAFAFA", "selection": "#2a2a36", "cursor": "#00F0FF", "cursorAccent": "#09090B", "black": "#16161f", "red": "#d58181", "green": "#b5bd68", "yellow": "#f0c674", "blue": "#6e93ff", "magenta": "#9b8cff", "cyan": "#5cc8bb", "white": "#a8a8a8", "brightBlack": "#757575", "brightRed": "#e8a0a0", "brightGreen": "#c9d88a", "brightYellow": "#ffff00", "brightBlue": "#8fb0ff", "brightMagenta": "#b8acff", "brightCyan": "#7fe0d5", "brightWhite": "#FAFAFA" }
 
 # --- Setup (hidden, not recorded) ---------------------------------------
 Hide
-Type "cd demo/sample-repo"
+Type "demo/reset-sample.sh && cd demo/sample-repo && PS1='$ ' && clear"
+Enter
+# The typed command runs the mock-backed launcher. Its args are the task text.
+Type 'hoocode() { ../run-mock.sh "$@"; }'
 Enter
 Type "clear"
 Enter
 Show
 
-# --- Scene A: launch (clip 0:00-0:02 / film 0:09-0:11) ------------------
-# Storyboard: VHS clip begins at 0:09. Caption "01 plans the task" starts here.
-Type "hoo"
-Enter
-Sleep 2s
-
-# --- Scene B: task 1, plan (clip 0:02-0:08 / film 0:11-0:17) -----------
-# Caption "01 plans the task" should stay up for this whole scene.
-# Typing ~52 chars at 45ms per char is about 2.5s.
-Type "Add a --json output flag to the stats command"
+# --- Scene A: launch (clip 0-1s; film 9-10s, caption "01 plans the mission" from film 9.6s) ---
+Sleep 1s
+Type 'hoocode "Add a --json flag to the stats command"'
 Sleep 500ms
 Enter
-Wait+Screen@30s /Plan/
+
+# --- Scene B: plan (clip 2-8s; film 11-17s, caption 01 on screen) ------------
+# The scripted turn 1 writes the plan with TodoWrite, which fills the FLIGHT PLAN panel.
+Wait+Screen@60s /FLIGHT PLAN|Plan/
 Sleep 2s
 
-# Approve the plan (TODO: confirm the approve key; Enter is a guess).
-Enter
+# --- Scene C: clearance for the edit (clip 8-12s; caption 02 from film 17.4s) ---
+# Read runs without approval. The Edit waits for "y go, once".
+Wait+Screen@60s /CLEARANCE NEEDED/
+Sleep 2s
+Type "y"
+Sleep 1s
 
-# --- Scene C: agent runs, edits, tests (clip 0:08-0:17 / film 0:17-0:26)
-# Caption "02 runs the agent". Waiting on cargo test output, so allow time to compile.
-Wait+Screen@90s /tests passed/
+# --- Scene D: clearance for cargo test (clip 12-16s; caption 02 still on screen) ---
+Wait+Screen@90s /CLEARANCE NEEDED/
+Sleep 2s
+Type "y"
+
+# --- Scene E: the test run and the landing (clip 16-26s; caption 03 from film 26.4s) ---
+Wait+Screen@180s /exit 0/
 Sleep 1500ms
-
-# --- Scene D: open PR (clip 0:17-0:25 / film 0:26-0:34, then hold to 0:36)
-# Caption "03 opens the PR".
-Type "Open a pull request with these changes"
-Sleep 500ms
-Enter
-Wait+Screen@90s /Pull request/
+Wait+Screen@120s /LANDED/
 Sleep 3s
 
-# --- Outro in tape (not in film; film has its own outro) ---------------
-Sleep 2s
-Ctrl+C
+Ctrl+D

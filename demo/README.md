@@ -1,83 +1,87 @@
 # HooCode demo assets
 
-Launch-demo assets for HooCode, a ratatui-based terminal coding agent.
+Launch-demo assets for HooCode, a terminal coding agent written in Rust. One static binary, any model provider, nothing applied without your say-so.
 
 Files:
 
-- `hoocode.tape`: VHS script that records the terminal demo to `out/hoocode.mp4` and `out/hoocode.gif`.
+- `hoocode.tape`: VHS script. Runs the real `hoocode` binary against a scripted model and records `out/hoocode.mp4` and `out/hoocode.gif`.
+- `scenario.json`: the scripted model turns (same format as `scripts/demo/demo.json`, `llm` list).
+- `run-mock.sh`: starts the mock model and runs `hoocode` in `sample-repo`. The tape calls it.
+- `reset-sample.sh`: restores `sample-repo` with `git checkout`, so each recording starts from the same file.
+- `sample-repo/`: a small std-only Rust crate (`toolbox stats <file>`). The demo adds `--json` to it.
 - `storyboard.md`: 45s launch film storyboard and a 15s social teaser cut list.
 - `film/index.html`: HyperFrames-style composition (GSAP timeline, 1920x1080) that wraps the clip.
-- `out/`: generated video and GIF (create with `mkdir -p demo/out`).
+- `out/`: generated video and GIF (not committed).
 
 ## Prerequisites
 
-- VHS >= 0.8 (`Wait+Screen` needs it). Install with `go install github.com/charmbracelet/vhs@latest` or `brew install vhs`. VHS needs `ttyd` and `ffmpeg` on PATH.
-- The `hoo` binary on PATH (placeholder name, see TODO).
-- A sample repo at `demo/sample-repo` (not created yet, see TODO).
+- A HooCode binary built from the source clone. The clone is read-only for this work, so build it there, or in your own checkout:
 
-## Run it
+  ```sh
+  cd /home/user/kolisachint/hoocode
+  cargo build --release -p hoocode-code-main --bin hoocode
+  ```
 
-1. Record the terminal demo from the repo root:
+- VHS >= 0.8 (`Wait+Screen` needs it). Install with `go install github.com/charmbracelet/vhs@latest` (tested with v0.12.1). VHS needs `ttyd` and `ffmpeg` on PATH.
+- `bash`, `python3`, and `cargo` (with a Rust toolchain) on PATH. `run-mock.sh` runs `cargo test` in `sample-repo`, and `mockllm.py` is stdlib Python.
+- The HooCode source clone, for `scripts/tui/mockllm.py`. Default `/home/user/kolisachint/hoocode`; set `HOOCODE_SRC` to change it.
 
-   ```sh
-   mkdir -p demo/out
-   vhs demo/hoocode.tape
-   ```
+## Record the terminal demo
 
-2. Preview the film in a browser:
+From the repo root:
 
-   ```sh
-   npx serve demo -l 5055
-   # open http://localhost:5055/film/index.html
-   # add ?autoplay to play on load; click or Space toggles play
-   ```
+```sh
+mkdir -p demo/out
+HOOCODE_BIN=/home/user/kolisachint/hoocode/target/release/hoocode vhs demo/hoocode.tape
+```
 
-3. Render the film with HyperFrames: TBD. The exact command and flags still need to be taken from the HyperFrames docs.
+What happens:
 
-4. Re-run step 1 for each release, then re-render the film.
+1. The hidden setup runs `reset-sample.sh`, then defines `hoocode() { ../run-mock.sh "$@"; }` in the shell.
+2. The visible command `hoocode "Add a --json flag to the stats command"` runs `run-mock.sh` with that task.
+3. `run-mock.sh` builds the test binary once (outside the recording), starts `mockllm.py` on a free port with the turns from `scenario.json`, writes a throwaway `models.json` and `settings.json`, and runs `HOOCODE_BIN --offline --provider demo --model scripted-demo "<task>"` in `sample-repo` with the same env as `scripts/demo/record.py`. The mock is stopped when hoocode exits.
+4. The tape waits for the plan, answers the two clearance cards with `y`, waits for `exit 0` and `LANDED`, then quits with Ctrl+D.
 
-## TODO and assumptions
+Only the model is scripted. The Edit changes `src/main.rs` and the Shell call runs `cargo test` for real.
 
-Everything below is a placeholder or guess. Fix these before recording the final version.
+To run the same setup by hand, without VHS (the TUI is interactive, so this shows the screen in your terminal):
 
-**Product facts**
+```sh
+HOOCODE_BIN=/home/user/kolisachint/hoocode/target/release/hoocode demo/run-mock.sh "Add a --json flag to the stats command"
+```
 
-- [ ] Binary name is `hoo`. Used in `hoocode.tape` (`Require hoo`, `Type "hoo"`) and the README.
-- [ ] Install command is `curl -fsSL https://hoocode.dev/install.sh | sh`. Used in `film/index.html` and `storyboard.md`.
-- [ ] Version is `v0.1.25`. Shown in the film outro and the teaser end card.
-- [ ] Brand spelling and wordmark `HOO` are placeholders. Check the logo and brand name.
-- [ ] Product name appears as "HooCode" everywhere. Confirm the capitalization.
+Then `demo/reset-sample.sh` to restore the sample repo.
 
-**Keybindings and UI text (VHS tape)**
+### How scenario.json maps to demo.json
 
-- [ ] Enter submits a prompt.
-- [ ] Enter approves the plan. The approve key is a guess.
-- [ ] Ctrl+C quits. Replace with the real quit key or slash command.
-- [ ] Screen strings the tape waits on: `/Plan/`, `/tests passed/`, `/Pull request/`. Confirm the real UI text.
-- [ ] The app starts from a bash prompt with no login or API key setup on screen. If it needs a key or sign-in, add setup steps to the hidden section of the tape.
+| `scripts/demo/demo.json` | `demo/scenario.json` |
+|---|---|
+| `model`: provider `demo`, id `scripted-demo` | same |
+| `prepare`: `cargo test --quiet --lib --no-run` | `cargo test --quiet --no-run` (the crate has no `--lib` target) |
+| `llm`: turns, each with `text` and `tool_calls` | same format. Six turns: TodoWrite plan, Read, Edit, Shell `cargo test --quiet`, TodoWrite done, summary |
+| Edit arguments: `path` and `edits` with `oldText`/`newText` | same. The five edits were checked to turn `sample-repo/src/main.rs` into the post-edit file exactly |
+| Tool names `Read`, `Edit`, `Shell` | same. The plan uses `TodoWrite` (on by default, not approval-gated) so the FLIGHT PLAN panel fills |
+| `files`, `git`, `steps`, `workspace`, `terminal` | left out. The sample repo is a committed directory, and the tape drives the screen steps |
 
-**Sample repo and tasks**
+## Preview the film
 
-- [ ] `demo/sample-repo` does not exist. Create a small Rust crate with a `stats` subcommand and passing `cargo test`. Without it, the tape fails at `cd`.
-- [ ] Task 1 prompt: "Add a --json output flag to the stats command". Edit it in `hoocode.tape`. Film captions do not repeat it.
-- [ ] Task 2 is the agent run: edit files, then `cargo test` passes. Compile time may need a longer `Wait+Screen@90s` timeout.
-- [ ] Task 3 prompt: "Open a pull request with these changes". The tape assumes the PR opens inside the TUI and shows a URL. The PR will target a real remote. Use a throwaway repo or a sandbox account. Do not run this against a real project.
-- [ ] Clip footage is about 25s. Re-check the film timings if you change the tape.
+```sh
+npx serve demo -l 5055
+# open http://localhost:5055/film/index.html
+# add ?autoplay to play on load; click or Space toggles play
+```
 
-**Film and HyperFrames**
+The film's `<video>` points at `../out/hoocode.mp4`, so it plays only after the recording. Without the file, the demo scene is empty and the browser logs one 404.
 
-- [ ] HyperFrames render CLI command and flags are unknown. Check the HyperFrames docs for the render command, viewport (1920x1080 assumed), fps, and how the composition is handed to the renderer. The HTML has a comment on this.
-- [ ] `?autoplay` plays the timeline on load. Without it the timeline starts paused. This is my reading of the spec.
-- [ ] The `data-composition-id` and `data-duration="45"` attributes follow the spec. Confirm the exact HyperFrames attribute names.
-- [ ] The video is driven by a `currentTime` tween, so it never plays on its own. Confirm this works in the HyperFrames renderer.
-- [ ] Captions and countdown copy are drafts.
+## Render the film
 
-**Teaser (Huashu Motion)**
+Render with HyperFrames is not set up yet. See the first open question below.
 
-- [ ] Remove the "Made with huashu-motion" credit, as requested. Before publishing, check the Huashu Motion license for any attribution it requires.
-- [ ] Do not imitate the HooCode UI in the teaser. The storyboard says so, but the cut list has not been reviewed against it.
+## Open questions
 
-**Tooling**
+- [ ] HyperFrames render command, flags, viewport, and fps. The HTML lists its assumptions (1920x1080, `data-composition-id="hoocode-launch"`, `data-duration="45"`, `window.__timeline` and `window.__timelines.main`), but the renderer has not been run.
+- [ ] Caption timings (9.6, 17.4, 26.4 s in the film) are estimates. Set them after the first real recording, because the clip's clearance and test times depend on the machine.
+- [ ] The first recording may need its `Wait+Screen` timeouts tuned, mainly the first `cargo test`, which can compile.
+- [ ] Teaser credit: remove the "Made with huashu-motion" credit as requested, and check the Huashu Motion license before publishing.
 
-- [ ] `demo/out/` must exist before recording.
-- [ ] `vhs validate demo/hoocode.tape` passes (checked with VHS installed via `go install`). The tape has not been recorded yet: `ttyd`, `ffmpeg`, and a real `hoo` binary are not set up, and the sample repo is missing. Expect timing and `Wait+Screen` timeouts to need tuning on the first real run.
+Checked against the source, not yet by a recording: the TUI strings the tape waits for (`FLIGHT PLAN`, `CLEARANCE NEEDED`, `exit 0`, `LANDED`) are taken from the source, and the film's Playwright check passes (screens at 2, 4.5, 7.1, 20 and 40 s, no page errors).

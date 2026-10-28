@@ -5,19 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HooCode launch film</title>
 <!--
-  HyperFrames composition (PLACEHOLDER: not verified against HyperFrames).
+  HyperFrames composition (draft, not yet rendered with HyperFrames).
   - Root: #stage with data-composition-id="hoocode-launch" and data-duration="45".
-  - Timeline: window.__timeline and window.__timelines.main. Labels: intro 0, mission 5, demo 9, outro 36, end 45.
-  - Video: ../out/hoocode.mp4 (made by `vhs demo/hoocode.tape`). Driven by the timeline's currentTime tween; never plays on its own.
-  - Browser preview: open with ?autoplay to play on load. Without it the timeline starts paused. Click the stage to toggle play.
-  - TODO: check the HyperFrames docs for the exact render-CLI flags, the expected viewport (1920x1080 here), fps, and how the composition is handed to the renderer. Nothing below has been checked against them.
+  - Timeline: window.__timeline and window.__timelines.main. Labels: intro 0, mission 5, demo 9, outro 36.
+  - Wordmark: the exact 3-row HooCode glyph from crates/hoocode-code-tui-app/src/wordmark.rs,
+    each column coloured from #5cc8bb (accent) to #9b8cff (violet), as the TUI paints it.
+  - Video: ../out/hoocode.mp4 (from `vhs demo/hoocode.tape`). Driven by the timeline's currentTime tween.
+  - Browser preview: ?autoplay plays on load. Click the stage or press Space to toggle.
+  - Brand colours (brand SVG): bg #09090B, ink #FAFAFA, muted #A1A1AA, accent #00F0FF, rule #27272A.
 -->
 <style>
   :root {
-    --bg: #05060d;
-    --fg: #e6e9f5;
-    --accent: #8fd3ff;
-    --dim: #6b7090;
+    --bg: #09090B;
+    --ink: #FAFAFA;
+    --muted: #A1A1AA;
+    --accent: #00F0FF;
+    --rule: #27272A;
     --mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
     --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
@@ -25,53 +28,54 @@
   #frame { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
   #stage {
     position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden;
-    background: var(--bg); color: var(--fg); font-family: var(--sans);
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
   }
 
-  /* CSS starfield: two layers of dots at different tile sizes (parallax). */
+  /* Faint starfield, two parallax layers, in the rule colour. */
   #stars {
-    position: absolute; inset: 0;
+    position: absolute; inset: 0; opacity: 0.8;
     background-image:
-      radial-gradient(1px 1px at 120px 180px, #fff 50%, transparent 51%),
-      radial-gradient(1px 1px at 430px 380px, #cfe8ff 50%, transparent 51%),
-      radial-gradient(2px 2px at 300px 90px, #fff 50%, transparent 51%),
-      radial-gradient(1px 1px at 610px 260px, #bcd 50%, transparent 51%),
-      radial-gradient(1px 1px at 850px 470px, #fff 50%, transparent 51%),
-      radial-gradient(2px 2px at 760px 150px, #9cf 50%, transparent 51%),
-      radial-gradient(1px 1px at 180px 500px, #fff 50%, transparent 51%),
-      radial-gradient(1px 1px at 520px 40px, #fff 50%, transparent 51%),
-      radial-gradient(1px 1px at 940px 20px, #cfe8ff 50%, transparent 51%);
+      radial-gradient(1px 1px at 120px 180px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 430px 380px, #3f3f46 50%, transparent 51%),
+      radial-gradient(2px 2px at 300px 90px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 610px 260px, #3f3f46 50%, transparent 51%),
+      radial-gradient(1px 1px at 850px 470px, #27272A 50%, transparent 51%),
+      radial-gradient(2px 2px at 760px 150px, #3f3f46 50%, transparent 51%),
+      radial-gradient(1px 1px at 180px 500px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 520px 40px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 940px 20px, #3f3f46 50%, transparent 51%);
     background-size: 960px 540px;
   }
   #stars-far {
     background-image:
-      radial-gradient(1px 1px at 700px 900px, #fff 50%, transparent 51%),
-      radial-gradient(2px 2px at 1400px 300px, #fff 50%, transparent 51%),
-      radial-gradient(1px 1px at 1150px 700px, #9cf 50%, transparent 51%),
-      radial-gradient(1px 1px at 1700px 120px, #fff 50%, transparent 51%),
-      radial-gradient(1px 1px at 1560px 980px, #fff 50%, transparent 51%),
-      radial-gradient(1px 1px at 280px 640px, #bcd 50%, transparent 51%);
+      radial-gradient(1px 1px at 700px 900px, #27272A 50%, transparent 51%),
+      radial-gradient(2px 2px at 1400px 300px, #3f3f46 50%, transparent 51%),
+      radial-gradient(1px 1px at 1150px 700px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 1700px 120px, #3f3f46 50%, transparent 51%),
+      radial-gradient(1px 1px at 1560px 980px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 280px 640px, #3f3f46 50%, transparent 51%);
     background-size: 1920px 1080px;
-    opacity: 0.7;
+    opacity: 0.6;
   }
 
   .scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
 
-  /* Block wordmark: each glyph is a span (generated in JS). */
-  pre.wordmark {
-    margin: 0; font-family: var(--mono); line-height: 0.98; white-space: pre;
-    color: var(--fg); font-size: 140px; text-shadow: 0 0 40px rgba(143, 211, 255, 0.35);
-  }
+  /* The wordmark: each character is its own span (built in JS). */
+  pre.wordmark { margin: 0; font-family: var(--mono); line-height: 1; white-space: pre; }
   pre.wordmark .ch { display: inline-block; }
-  pre.wordmark.small { font-size: 56px; text-shadow: none; color: var(--accent); }
 
-  /* Intro */
-  #scene-intro { display: flex; align-items: center; justify-content: center; }
+  /* Intro: wordmark beside the name and the version line. */
+  #scene-intro { display: flex; align-items: center; justify-content: center; gap: 72px; }
+  #wordmark { font-size: 190px; }
+  #brand { display: flex; flex-direction: column; gap: 22px; }
+  #brand-name { margin: 0; font-family: var(--sans); font-size: 150px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--ink); min-height: 150px; }
+  #brand-sub { margin: 0; font-family: var(--mono); font-size: 42px; color: var(--muted); min-height: 52px; }
+  #brand-sub .dot { color: var(--accent); }
 
   /* Mission */
   #scene-mission { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 56px; }
-  #mission-title { margin: 0; font-size: 96px; font-weight: 700; letter-spacing: 0.2em; color: var(--fg); }
-  #mission-sub { margin: 0; font-family: var(--mono); font-size: 28px; letter-spacing: 0.3em; color: var(--dim); }
+  #mission-title { margin: 0; font-size: 96px; font-weight: 700; letter-spacing: 0.2em; color: var(--ink); }
+  #mission-sub { margin: 0; font-family: var(--mono); font-size: 28px; letter-spacing: 0.3em; color: var(--muted); }
   #countdown { position: relative; width: 800px; height: 320px; }
   #countdown span {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -82,34 +86,37 @@
   /* Demo: terminal frame sized 1280x720 (scaled from the tape's 1600x900). */
   #term {
     position: absolute; left: 320px; top: 110px; width: 1280px; height: 720px;
-    border-radius: 14px; overflow: hidden; background: #1e1e2e;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(143, 211, 255, 0.15);
+    border-radius: 14px; overflow: hidden; background: #09090B;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--rule);
     opacity: 0; visibility: hidden;
   }
   #term .bar {
-    height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #313244;
+    height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #16161f;
   }
   #term .bar i { width: 13px; height: 13px; border-radius: 50%; display: block; }
-  #term .bar i:nth-child(1) { background: #f38ba8; }
-  #term .bar i:nth-child(2) { background: #f9e2af; }
-  #term .bar i:nth-child(3) { background: #a6e3a1; }
-  #term video { display: block; width: 1280px; height: 680px; object-fit: contain; background: #1e1e2e; }
+  #term .bar i:nth-child(1) { background: #d58181; }
+  #term .bar i:nth-child(2) { background: #f0c674; }
+  #term .bar i:nth-child(3) { background: #b5bd68; }
+  #term video { display: block; width: 1280px; height: 680px; object-fit: contain; background: #09090B; }
   #captions { position: absolute; left: 0; right: 0; top: 870px; height: 110px; }
   #captions .cap {
     position: absolute; left: 0; right: 0; text-align: center; font-family: var(--mono);
-    font-size: 48px; letter-spacing: 0.04em; color: var(--fg); opacity: 0; visibility: hidden;
+    font-size: 48px; letter-spacing: 0.04em; color: var(--ink); opacity: 0; visibility: hidden;
   }
   #captions .cap b { color: var(--accent); font-weight: 700; margin-right: 0.4em; }
 
   /* Outro */
-  #scene-outro { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 56px; }
+  #scene-outro { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 44px; }
+  #wordmark-small { font-size: 64px; }
   #install-box {
-    font-family: var(--mono); font-size: 46px; color: var(--fg); padding: 36px 52px;
-    border-radius: 14px; background: #11121c; border: 1px solid rgba(143, 211, 255, 0.3);
-    box-shadow: 0 0 60px rgba(143, 211, 255, 0.12); white-space: nowrap; opacity: 0;
+    font-family: var(--mono); font-size: 38px; color: var(--ink); padding: 34px 50px;
+    border-radius: 14px; background: #111113; border: 1px solid var(--rule);
+    white-space: nowrap; opacity: 0;
   }
   #install-box .prompt { color: var(--accent); margin-right: 0.5em; }
+  #alt-install { margin: 0; font-family: var(--mono); font-size: 26px; color: var(--muted); opacity: 0; }
   #version { margin: 0; font-family: var(--mono); font-size: 52px; color: var(--accent); opacity: 0; letter-spacing: 0.08em; }
+  #tagline { margin: 0; font-size: 34px; color: var(--ink); opacity: 0; letter-spacing: 0.01em; }
 </style>
 </head>
 <body>
@@ -120,7 +127,11 @@
 
   <!-- 0:00 to 0:05 intro -->
   <section class="scene" id="scene-intro">
-    <pre class="wordmark" id="wordmark" aria-label="HOO"></pre>
+    <pre class="wordmark" id="wordmark" aria-label="HooCode"></pre>
+    <div id="brand">
+      <p id="brand-name">hoocode</p>
+      <p id="brand-sub">coding agent <span class="dot">&middot;</span> v0.2.20</p>
+    </div>
   </section>
 
   <!-- 0:05 to 0:09 mission -->
@@ -132,27 +143,26 @@
     </div>
   </section>
 
-  <!-- 0:09 to 0:36 demo (clip is 25s of footage, held on last frame) -->
+  <!-- 0:09 to 0:36 demo (the clip is about 25s of footage, held on its last frame) -->
   <section class="scene" id="scene-demo">
     <div id="term">
       <div class="bar"><i></i><i></i><i></i></div>
-      <!-- PLACEHOLDER clip path. Make it with `vhs demo/hoocode.tape` first. -->
       <video id="demo-video" src="../out/hoocode.mp4" muted playsinline preload="auto"></video>
     </div>
     <div id="captions">
-      <div class="cap" id="cap-1"><b>01</b>plans the task</div>
-      <div class="cap" id="cap-2"><b>02</b>runs the agent</div>
-      <div class="cap" id="cap-3"><b>03</b>opens the PR</div>
+      <div class="cap" id="cap-1"><b>01</b>plans the mission</div>
+      <div class="cap" id="cap-2"><b>02</b>asks clearance before it acts</div>
+      <div class="cap" id="cap-3"><b>03</b>runs the tests and lands it</div>
     </div>
   </section>
 
   <!-- 0:36 to 0:45 outro -->
   <section class="scene" id="scene-outro">
-    <pre class="wordmark small" id="wordmark-small" aria-label="HOO"></pre>
-    <!-- PLACEHOLDER install command (TODO: confirm the real install URL). -->
-    <div id="install-box"><span class="prompt">$</span><span id="install-cmd">curl -fsSL https://hoocode.dev/install.sh | sh</span></div>
-    <!-- PLACEHOLDER version (TODO: confirm). -->
-    <p id="version">v0.1.25</p>
+    <pre class="wordmark" id="wordmark-small" aria-label="HooCode"></pre>
+    <div id="install-box"><span class="prompt">$</span><span id="install-cmd">curl -fsSL https://kolisachint.github.io/hoocode/install.sh | sh</span></div>
+    <p id="alt-install">or npm i -g hoocode &middot; pip install hoocode</p>
+    <p id="version">v0.2.20</p>
+    <p id="tagline">nothing applied without your say-so</p>
   </section>
 </div>
 </div>
@@ -160,34 +170,34 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
 (function () {
-  // Block glyphs for "HOO", 4 rows, 17 columns. Half blocks give the bevel.
-  var GLYPHS = [
-    "█   █ ▟▀▀▀▙ ▟▀▀▀▙",
-    "█   █ █   █ █   █",
-    "█▀▀▀█ █   █ █   █",
-    "█   █ ▜▄▄▄▛ ▜▄▄▄▛"
-  ];
+  // The exact wordmark (crates/hoocode-code-tui-app/src/wordmark.rs): 3 rows, 7 columns.
+  var ROWS = ["▟▀▀▀▀▀▙", "▌▟▙ ▟▙▐", "▜▄▄▄▄▄▛"];
+  var ACCENT = [0x5c, 0xc8, 0xbb];   // #5cc8bb
+  var VIOLET = [0x9b, 0x8c, 0xff];   // #9b8cff
 
-  // Deterministic pseudo-random (no Math.random, so seeked frames are repeatable).
+  function hex(c) { return "#" + c.map(function (v) { return Math.round(v).toString(16).padStart(2, "0"); }).join(""); }
+  function lerp(a, b, t) { return [0, 1, 2].map(function (i) { return a[i] + (b[i] - a[i]) * t; }); }
+
+  // Deterministic pseudo-random (no Math.random, so seeked frames repeat).
   function rnd(i) { var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
 
-  // Build a <pre> wordmark where every character is its own span.
+  // Build a <pre> wordmark: one span per character, coloured by column.
   function buildWordmark(el) {
     el.innerHTML = "";
-    var chars = [];
-    GLYPHS.forEach(function (row, r) {
+    var cols = ROWS[0].length;
+    var animated = [];
+    ROWS.forEach(function (row, r) {
       Array.prototype.forEach.call(row, function (ch, c) {
         var s = document.createElement("span");
         s.className = "ch";
-        s.dataset.r = r;
-        s.dataset.c = c;
         s.textContent = ch;
+        s.style.color = hex(lerp(ACCENT, VIOLET, c / (cols - 1)));
         el.appendChild(s);
-        if (ch !== " ") chars.push(s);
+        if (ch !== " ") animated.push(s);
       });
       el.appendChild(document.createTextNode("\n"));
     });
-    return chars;
+    return animated;
   }
 
   var stage = document.getElementById("stage");
@@ -196,7 +206,6 @@
   var introChars = buildWordmark(document.getElementById("wordmark"));
   buildWordmark(document.getElementById("wordmark-small"));
 
-  // Random start offsets for the intro assembly.
   var fromX = introChars.map(function (_, i) { return (rnd(i) - 0.5) * 1400; });
   var fromY = introChars.map(function (_, i) { return (rnd(i + 99) - 0.5) * 900; });
   var fromR = introChars.map(function (_, i) { return (rnd(i + 17) - 0.5) * 240; });
@@ -210,7 +219,7 @@
     .addLabel("demo", 9)
     .addLabel("outro", 36);
 
-  // Starfield drift across the whole film.
+  // Starfield drift across the film.
   tl.to("#stars", { backgroundPosition: "-300px -160px", duration: 45, ease: "none" }, 0);
   tl.to("#stars-far", { backgroundPosition: "-120px -60px", duration: 45, ease: "none" }, 0);
 
@@ -222,13 +231,19 @@
     { x: 0, y: 0, rotation: 0, opacity: 1, scale: 1, duration: 0.9, ease: "back.out(1.7)",
       stagger: { each: 0.03, from: "center" } },
     "intro+=0.3");
+  // The name and the version line "type in": a stepped clip-path reveal, one step per character.
+  // Plain tweens only (no onUpdate), so seek() renders the same frame at any time.
+  tl.fromTo("#brand-name", { clipPath: "inset(0% 100% 0% 0%)" },
+    { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, ease: "steps(7)" }, "intro+=1.2");
+  tl.fromTo("#brand-sub", { clipPath: "inset(0% 100% 0% 0%)" },
+    { clipPath: "inset(0% 0% 0% 0%)", duration: 1.8, ease: "steps(22)" }, "intro+=2.2");
   tl.to("#scene-intro", { autoAlpha: 0, duration: 0.4 }, "intro+=4.6");
 
   // ---- mission (5 to 9) ----
   tl.to("#scene-mission", { autoAlpha: 1, duration: 0.4 }, "mission");
   tl.fromTo("#mission-title", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, "mission+=0.1");
   tl.fromTo("#mission-sub", { opacity: 0 }, { opacity: 1, duration: 0.6 }, "mission+=0.4");
-  // Countdown: one number per second, each fades out before the next (seek-safe, no callbacks).
+  // Countdown: one number per second, each fading before the next.
   var counts = document.querySelectorAll("#countdown span");
   counts.forEach(function (span, i) {
     var t = 5 + i;
@@ -240,10 +255,10 @@
   // ---- demo (9 to 36) ----
   tl.to("#scene-demo", { autoAlpha: 1, duration: 0.2 }, "demo");
   tl.fromTo("#term", { y: 40, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "demo");
-  // Drive the clip frame by frame: clip time 0 to 25 over film 9 to 34, then it holds to 36.
+  // The clip runs from its start over film 9 to 34, then holds to 36.
   tl.set(video, { currentTime: 0 }, "demo");
   tl.to(video, { currentTime: 25, duration: 25, ease: "none" }, "demo");
-  // Captions in sequence (film times from the storyboard).
+  // Captions, in order.
   tl.fromTo("#cap-1", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 9.6);
   tl.to("#cap-1", { autoAlpha: 0, duration: 0.3 }, 16.5);
   tl.fromTo("#cap-2", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 17.4);
@@ -256,12 +271,14 @@
   tl.to("#scene-outro", { autoAlpha: 1, duration: 0.4 }, 35.6);
   tl.fromTo("#wordmark-small", { y: -30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "outro+=0.2");
   tl.fromTo("#install-box", { y: 20, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "outro+=1.2");
+  tl.fromTo("#alt-install", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 }, "outro+=2.0");
   tl.fromTo("#version", { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5 }, "outro+=2.6");
+  tl.fromTo("#tagline", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "outro+=3.2");
 
-  // Pin the total length to 45s (the timeline would otherwise end at the last tween).
+  // Pin the total length to 45s.
   tl.set({}, {}, 45);
 
-  // Fit the 1920x1080 stage into the window (preview only; a renderer viewport of 1920x1080 is a no-op).
+  // Fit the 1920x1080 stage into the window (preview only).
   function fit() {
     var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
     frame.style.transform = "scale(" + s + ")";
@@ -277,7 +294,7 @@
     if (e.code === "Space") { e.preventDefault(); tl.paused() ? tl.play() : tl.pause(); }
   });
 
-  // ?autoplay: play on load in a browser. Without it the timeline stays paused at 0.
+  // ?autoplay: play on load. Without it the timeline stays paused at 0.
   if (new URLSearchParams(window.location.search).has("autoplay")) {
     tl.play(0);
   }
