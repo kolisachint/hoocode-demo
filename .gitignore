@@ -11,3 +11,4 @@ recording/sample-repo/target
 # HyperFrames render and check artifacts
 trailer/.hyperframes/
 trailer/node_modules/
+preview/

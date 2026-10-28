@@ -10,11 +10,16 @@
 # Env:    HOOCODE_BIN  binary to run (default: hoocode on PATH)
 #         HOOCODE_SRC  hoocode source clone, for scripts/tui/mockllm.py
 #                      (default /home/user/kolisachint/hoocode; never modified)
+#         SCENARIO     scenario file (default recording/scenario.json; v2 uses
+#                      v2/recording/scenario.json)
+#         TOOLBOX=1    run in a copy of the sample at $HOME/toolbox (the TUI then shows
+#                      ~/toolbox instead of the repo path). Default: run in recording/sample-repo.
 set -euo pipefail
 
 DEMO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SAMPLE_DIR="$DEMO_DIR/sample-repo"
-SCENARIO="$DEMO_DIR/scenario.json"
+SCENARIO="${SCENARIO:-$DEMO_DIR/scenario.json}"
+TOOLBOX="${TOOLBOX:-0}"
 HOOCODE_SRC="${HOOCODE_SRC:-/home/user/kolisachint/hoocode}"
 MOCKLLM="$HOOCODE_SRC/scripts/tui/mockllm.py"
 HOOCODE_BIN="${HOOCODE_BIN:-hoocode}"
@@ -37,9 +42,19 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# With TOOLBOX=1 the sample is copied to $WORK/home/toolbox (HOME is $WORK/home in the
+# run below), so the working folder shows as ~/toolbox. The copy is made before `prepare`,
+# so the build happens in the same folder the run uses.
+RUN_DIR="$SAMPLE_DIR"
+if [[ "$TOOLBOX" == "1" ]]; then
+  mkdir -p "$WORK/home"
+  cp -R "$SAMPLE_DIR" "$WORK/home/toolbox"
+  RUN_DIR="$WORK/home/toolbox"
+fi
+
 # Phase 1: scenario -> mock script, settings, and the `prepare` commands (build once,
 # outside the recording). Mirrors record.py's prepare step, with cargo's home kept real.
-python3 - "$SCENARIO" "$WORK" "$SAMPLE_DIR" prepare "$REAL_HOME" <<'PY'
+python3 - "$SCENARIO" "$WORK" "$RUN_DIR" prepare "$REAL_HOME" <<'PY'
 import json, os, subprocess, sys
 from pathlib import Path
 
@@ -96,7 +111,7 @@ PY
 
 # Phase 3: the real binary, with record.py's env (nothing else inherited) and argv.
 # Not `exec`: the cleanup trap must run to stop the mock when hoocode exits.
-cd "$SAMPLE_DIR"
+cd "$RUN_DIR"
 set +e
 env -i \
   HOME="$WORK/home" \
