@@ -29,7 +29,7 @@
 
   <!-- 2.0-14.0 footage (plate) under the camera, with brackets, verb plates and keycaps -->
   <section class="scene" id="s-foot" style="visibility:hidden;">
-    <div class="cam" id="cam">
+    <div class="cam" id="cam" data-layout-allow-overflow>
       <video id="plate" class="clip" data-start="2" data-duration="12" data-media-start="0" data-track-index="2" src="assets/plate.mp4" muted playsinline preload="auto"></video>
     </div>
     <div class="br" id="br"><i class="a"></i><i class="b"></i><i class="c2"></i><i class="d"></i></div>
@@ -62,7 +62,7 @@
       <path id="lk-arch" d="M 30,42 A 12,12 0 0 1 54,42 L 54,56" fill="none" stroke="#FAFAFA" stroke-width="4" stroke-linecap="round"/>
       <circle id="lk-n1" cx="71" cy="44" r="12" fill="none" stroke="#FAFAFA" stroke-width="4"/>
       <circle id="lk-n2" cx="95" cy="44" r="12" fill="none" stroke="#FAFAFA" stroke-width="4" transform="rotate(180 95 44)"/>
-      <polygon id="lk-ring" points="83,41 86,44 83,47 80,44" fill="none" stroke="#00F0FF" stroke-width="0.5" opacity="0"/>
+      <polygon id="lk-ring" points="83,41 86,44 83,47 80,44" fill="none" stroke="#00F0FF" stroke-width="2" vector-effect="non-scaling-stroke" opacity="0"/>
       <g id="lk-spark-g" filter="url(#lk-glow)"><polygon id="lk-spark" points="83,41 86,44 83,47 80,44" fill="#00F0FF"/></g>
       <path id="lk-arc" d="M 112,32 A 16,16 0 0 1 112,56" fill="none" stroke="#00F0FF" stroke-width="3" stroke-linecap="round"/>
       <line id="lk-div" x1="130" y1="30" x2="130" y2="60" stroke="#27272A" stroke-width="2" stroke-linecap="round"/>

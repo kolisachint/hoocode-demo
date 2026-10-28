@@ -128,7 +128,8 @@
     }
     var g0 = geo(r0), g1 = geo(r1);
     tl.set(el, { x: g0.x, y: g0.y, width: g0.width, height: g0.height, visibility: "visible" }, t0);
-    tl.fromTo(el, { opacity: 0, scale: 1.10 }, { opacity: 1, scale: 1, duration: 0.18, ease: EXPO, immediateRender: false }, t0);
+    // already half-on on the landing frame, fully on the next (a snap, not a fade)
+    tl.fromTo(el, { opacity: 0.6, scale: 1.08 }, { opacity: 1, scale: 1, duration: 0.18, ease: EXPO, immediateRender: false }, t0);
     tl.to(el, { x: g1.x, y: g1.y, width: g1.width, height: g1.height, duration: Math.max(t1 - t0, 0.01), ease: "none", immediateRender: false }, t0);
     tl.to(el, { opacity: 0, duration: 0.2, ease: "power2.in", immediateRender: false }, tOff);
     tl.set(el, { visibility: "hidden" }, tOff + 0.2);
@@ -137,7 +138,7 @@
   // Verb plate: 2-frame opacity snap, scale 1.12 -> 1.00 over 0.25 s, hard cut out.
   K.verb = function (tl, el, tIn, tOut) {
     tl.set(el, { visibility: "visible" }, tIn);
-    tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 2 / 30, ease: "none", immediateRender: false }, tIn);
+    tl.fromTo(el, { opacity: 0.5 }, { opacity: 1, duration: 1 / 30, ease: "none", immediateRender: false }, tIn);   // on in 2 frames
     tl.fromTo(el, { scale: 1.12 }, { scale: 1, duration: 0.25, ease: EXPO, immediateRender: false }, tIn);
     tl.set(el, { visibility: "hidden" }, tOut);
   };

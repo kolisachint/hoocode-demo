@@ -51,34 +51,46 @@ def media_start(cue, film_t, act_start):
 
 ACTS = []
 
+
+def video(start, end, media):
+    return dict(kind="video", start=start, end=end, media=round(media, 4))
+
+
+def still(frame, start, end):
+    return dict(kind="still", frame=frame, start=start, end=end)
+
+
 # 1 plans.  1.0-3.0  The task panel (the plan) appears on beat 2 (1.5); brackets land on it.
 ACTS.append(dict(id="plans", start=1.0, end=3.0,
-                 media=media_start("PANEL", 1.5, 1.0), video_end=3.0, still=None))
+                 clips=[video(1.0, 3.0, media_start("PANEL", 1.5, 1.0))]))
 
 # 2 asks.   3.0-5.0  Card 1 is up at the cut; keycap y at 4.5; the card leaves (Y1) at 4.6.
 #           Hold the post-Y1 frame from 4.8 (CARD2 would appear at 4.83).
 m2 = media_start("Y1", 4.6, 3.0)
-still2 = first_frame("CARD2") - 1
-ACTS.append(dict(id="asks", start=3.0, end=5.0, media=m2, video_end=4.8,
-                 still=dict(frame=still2, start=4.8, end=5.0)))
+ACTS.append(dict(id="asks", start=3.0, end=5.0,
+                 clips=[video(3.0, 4.8, m2), still(first_frame("CARD2") - 1, 4.8, 5.0)]))
 assert math.floor((m2 + (4.8 - 3.0)) * FPS) < first_frame("CARD2")
 assert math.floor((m2 + 0.0) * FPS) >= first_frame("CARD1")
 
-# 3 tests.  5.0-7.0  Starts the frame after card 3 leaves (Y3); exit 0 + "running 2 tests"
-#           appear live at 5.467; pan 5.6-6.0 lands on `exit 0` at 6.0; freeze 6.875-7.0.
-m3 = round(first_frame("Y3") / FPS + SAFE, 4)
-still3 = math.floor((m3 + (6.875 - 5.0)) * FPS)
-ACTS.append(dict(id="tests", start=5.0, end=7.0, media=m3, video_end=6.875,
-                 still=dict(frame=still3, start=6.875, end=7.0)))
-EXIT0_FILM = 5.0 + first_frame("EXIT0") / FPS - m3
+# 3 tests.  5.0-7.0  Red, then green. 5.0: hold the first frame after card 3 leaves (Y3): the
+#           failed run's `Command exited with code 101` and the fix diff. 5.467 (frame 164, the
+#           closest frame to beat 2 the take allows): the re-run lands (EXIT0, the screen scrolls)
+#           and plays live; push 5.6-6.0 onto `test result: ok. 2 passed`; freeze 6.875-7.0.
+RED_FRAME = first_frame("Y3")
+EXIT0_FILM = 164 / FPS
+m3 = round(first_frame("EXIT0") / FPS + SAFE, 4)
+ACTS.append(dict(id="tests", start=5.0, end=7.0, red_frame=RED_FRAME,
+                 clips=[still(RED_FRAME, 5.0, EXIT0_FILM), video(EXIT0_FILM, 6.875, m3),
+                        still(math.floor((m3 + 6.875 - EXIT0_FILM) * FPS), 6.875, 7.0)]))
 
 # 4 lands.  7.0-9.0  `● LANDED` is on screen on the drop's first frame.
 ACTS.append(dict(id="lands", start=7.0, end=9.0,
-                 media=media_start("LANDED", 7.0, 7.0), video_end=9.0, still=None))
+                 clips=[video(7.0, 9.0, media_start("LANDED", 7.0, 7.0))]))
 
 for a in ACTS:
-    last = a["media"] + (a["video_end"] - a["start"])
-    assert last <= CUES["clip_duration"], a
+    for c in a["clips"]:
+        if c["kind"] == "video":
+            assert c["media"] + (c["end"] - c["start"]) <= CUES["clip_duration"], a
 
 # Install line type-on 12.0-12.9: char k shows on frame 360 + floor(k * 27 / n).
 INSTALL_CMD = "curl -fsSL https://kolisachint.github.io/hoocode/install.sh | sh"
@@ -108,7 +120,8 @@ events = [
     {"t": 3.0, "cue": "blip-card"},                # clearance card on the cut
     {"t": 4.5, "cue": "key-press"},                # keycap y
     {"t": 4.5, "cue": "spark-micro"},              # the say-so spark
-    {"t": 6.0, "cue": "glitch-tick"},              # pan lands on exit 0, brackets
+    {"t": 5.0, "cue": "hit-buzz", "gain_db": -3.0},  # tests. opens on the red run (exit 101)
+    {"t": round(EXIT0_FILM, 4), "cue": "glitch-tick"},  # re-run lands green; chip flips to exit 0
     {"t": 7.0, "cue": "chime-landed"},             # ● LANDED on the drop
     {"t": 9.0, "cue": "spark-sting"},              # Symbol C spark (pre-suck 8.5-9.0)
 ]
@@ -216,14 +229,14 @@ def main():
     stills = os.path.join(shared, "stills")
     os.makedirs(stills, exist_ok=True)
     for a in ACTS:
-        if not a["still"]:
-            continue
-        f = a["still"]["frame"]
-        out = os.path.join(stills, "%s-f%04d.png" % (a["id"], f))
-        a["still"]["src"] = "assets/stills/" + os.path.basename(out)
-        if not os.path.exists(out):
-            subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", FOOTAGE, "-vf",
-                            "select=eq(n\\,%d)" % f, "-frames:v", "1", out], check=True)
+        for c in a["clips"]:
+            if c["kind"] != "still":
+                continue
+            out = os.path.join(stills, "f%04d.png" % c["frame"])
+            c["src"] = "assets/stills/" + os.path.basename(out)
+            if not os.path.exists(out):
+                subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", FOOTAGE, "-vf",
+                                "select=eq(n\\,%d)" % c["frame"], "-frames:v", "1", out], check=True)
     # beats.js again with still paths
     write(os.path.join(shared, "beats.js"),
           "// Generated by v2/teaser15/build.py. Do not edit.\nwindow.TEASER_BEATS = "
@@ -231,20 +244,31 @@ def main():
 
     tpl = open(os.path.join(shared, "template.html")).read()
     acts_html = []
-    for i, a in enumerate(ACTS):
-        clips = ('<video id="foot-%s" class="clip foot" data-start="%g" data-duration="%g" data-media-start="%g" '
-                 'src="assets/footage.mp4" muted playsinline preload="auto"></video>'
-                 % (a["id"], a["start"], round(a["video_end"] - a["start"], 4), a["media"]))
-        if a["still"]:
-            st = a["still"]
-            clips += ('<img id="hold-%s" class="clip foot" data-start="%g" data-duration="%g" src="%s" alt="">'
-                      % (a["id"], st["start"], round(st["end"] - st["start"], 4), st["src"]))
+    # Clips start CLIP_LEAD before their frame time, so a start like 5.4667 (frame 164 = 5.46666...)
+    # is already active on its frame; their ends stay put. Media in-points carry SAFE, so the lead
+    # does not change which footage frame shows.
+    CLIP_LEAD = 0.002
+    for a in ACTS:
+        clips = ""
+        for k, c in enumerate(a["clips"]):
+            c = dict(c, start=c["start"] - CLIP_LEAD,
+                     media=c["media"] - CLIP_LEAD if c["kind"] == "video" else None)
+            if c["kind"] == "video":
+                clips += ('<video id="foot-%s-%d" class="clip foot" data-start="%g" data-duration="%g" '
+                          'data-media-start="%g" src="assets/footage.mp4" muted playsinline preload="auto"></video>'
+                          % (a["id"], k, round(c["start"], 6), round(c["end"] - c["start"], 6), round(c["media"], 6)))
+            else:
+                clips += ('<img id="hold-%s-%d" class="clip foot" data-start="%g" data-duration="%g" src="%s" alt="">'
+                          % (a["id"], k, round(c["start"], 6), round(c["end"] - c["start"], 6), c["src"]))
         acts_html.append(
-            '<div class="act" id="act-%s"><div class="push"><div class="cam">%s</div></div>'
-            '<div class="brackets"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div></div>'
+            '<div class="act" id="act-%s"><div class="push"><div class="cam">%s</div>'
+            '<div class="brackets"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div></div></div>'
             % (a["id"], clips))
-    brk = INSTALL_CMD.index("-fsSL") + len("-fsSL ")  # 9:16 and 1:1 break the line after -fsSL
-    install = "".join('<span class="ch%s">%s</span>' % (" nl" if k == brk else "", c if c != " " else "&#32;")
+    # Line breaks ride on the char after them (shown with it): nl1 after "-fsSL " (9:16, 1:1),
+    # nl2 after "github.io/" (9:16 only, so the end card can use a larger size).
+    brk = {INSTALL_CMD.index("-fsSL") + len("-fsSL "): " nl1",
+           INSTALL_CMD.index("github.io/") + len("github.io/"): " nl2"}
+    install = "".join('<span class="ch%s">%s</span>' % (brk.get(k, ""), c if c != " " else "&#32;")
                       for k, c in enumerate(INSTALL_CMD))
     for name, (w, h) in ASPECTS.items():
         html = (tpl.replace("{{ASPECT}}", name).replace("{{W}}", str(w)).replace("{{H}}", str(h))
@@ -277,8 +301,10 @@ def main():
         link(stills, os.path.join(assets, "stills"))
     print("acts:")
     for a in ACTS:
-        print("  %-6s film %.3f-%.3f media-start %.4f video to %.3f still %s"
-              % (a["id"], a["start"], a["end"], a["media"], a["video_end"], a["still"]))
+        print("  %-6s film %.3f-%.3f" % (a["id"], a["start"], a["end"]))
+        for c in a["clips"]:
+            print("      %-5s %.4f-%.4f %s" % (c["kind"], c["start"], c["end"],
+                  "media-start %.4f" % c["media"] if c["kind"] == "video" else "frame %d" % c["frame"]))
     print("exit 0 appears at film %.3f" % EXIT0_FILM)
     print("events: %d -> %s" % (len(events), os.path.join(HERE, "events.json")))
 

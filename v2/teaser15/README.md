@@ -24,7 +24,7 @@ All 15.000 s, 450 frames, 30 fps, H.264 yuv420p CRF 16, AAC-LC 320 kb/s 48 kHz s
 | `shared/teaser.css` | Brand tokens, shared styles, and the three layouts (`.a9x16`, `.a1x1`, `.a16x9`). |
 | `shared/teaser.js` | The one GSAP timeline: cuts, camera (crop maths from the terminal grid), brackets, keycap, spark, lockup, type-on. |
 | `shared/beats.js` | Generated. The edit's times for `teaser.js`. |
-| `shared/stills/` | Generated. 4K freeze frames (`asks` frame 450, `tests` frame 739). |
+| `shared/stills/` | Generated. 4K freeze frames `f<frame>.png` (450: asks hold; 683: the red beat; 739: the tests air gap). |
 | `shared/gsap.min.js` | GSAP 3.14.2 (standard no-charge licence, `GSAP-LICENSE.txt`), as in v1's teaser. |
 | `9x16/`, `1x1/`, `16x9/` | The projects. `index.html` is generated (template + inline brand SVGs + inlined `beats.js`/`teaser.js`); `assets/` holds symlinks: `footage.mp4` -> `out/v2/hoocode-v2-4k.mp4`, `fonts` -> `v2/assets/fonts`, `shared`, `stills`. |
 
@@ -41,9 +41,10 @@ block-element glyphs). `symbol.svg` and `hoocode.svg` are inlined by `build.py` 
 
 `out/v2/hoocode-v2-4k.mp4` is 3840x2160: the xterm grid is 117 x 32 cells of 29 x 65 px with its origin
 at (224, 40). `teaser.js` places every crop and bracket in those cell coordinates (`cells(c0, c1, r0, r1)`).
-The window shows 1570 px of source width on 9:16 and 1:1 (terminal text about 32 px tall) and 1680 px
-on 16:9 (about 30 px). Footage in-points are computed so each cue's first frame (frame i shows cast
-events at t <= i/30) lands on its beat, plus 4 ms so floor- and round-based seeks agree.
+Each act has its own crop width per aspect (`SHOTS[*].w`): 1320 px of source width on 9:16 for asks,
+tests and lands (key strings about 36 px), 1400–1680 px elsewhere (about 30 px). Footage in-points are computed so each cue's first frame (frame i shows cast
+events at t <= i/30) lands on its beat, plus 4 ms so floor- and round-based seeks agree. Clips start
+2 ms before their frame time so a start such as frame 164 (5.4666…) is active on that frame.
 
 ## Rebuild
 
@@ -87,4 +88,4 @@ Preview: `cd v2/teaser15/<aspect> && npx -y hyperframes@0.8.210 preview --backgr
 that card 1 is up at 3.0 and card 2 is not yet up at 4.8, re-extracts the stills (delete
 `shared/stills/*.png` first) and rewrites `events.json`. Then re-check the crops and bracket cells in
 `teaser.js` (`SHOTS`) against the new frame: they assume the rows of this take (plan panel rows
-25-28, card rows 27-31, `exit 0` row 13, `● LANDED` row 23).
+25-28, card rows 27-31, red line row 10 on frame 683, `test result` row 16, `● LANDED` row 23).

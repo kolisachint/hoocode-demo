@@ -19,28 +19,33 @@
   function cells(c0, c1, r0, r1) {           // inclusive cell range -> rect
     return { x0: GX + c0 * CW, x1: GX + (c1 + 1) * CW, y0: GY + r0 * CH, y1: GY + (r1 + 1) * CH };
   }
-  // Crop width in 4K px: the window shows this much of the frame's width (narrower on the
-  // phone formats so the terminal text stays about 32 px tall).
-  var CROP_W = { a9x16: 1570, a1x1: 1570, a16x9: 1680 }[stage.className] || 1680;
-  // Per act: crop left edge (4K px), vertical placement, bracket target.
+  // Each shot: crop width in 4K px per aspect (the window shows this much of the frame's width),
+  // crop left edge x, vertical placement (bottom edge or centre), bracket target cells.
+  // 9:16 pushes in further on the key strings so they render about 36 px tall on a phone.
+  var ASPECT = stage.className;
   var SHOTS = {
-    plans: { x: 232, bottom: 2160, target: cells(2, 51, 25, 28) },     // task panel: the 4-item plan
-    asks:  { x: 180, bottom: 2210, target: cells(0, 20, 27, 28) },     // ◎ CLEARANCE NEEDED / Edit src/main.rs
-    tests: { x: 232, cy: 1150, target: cells(100, 115, 13, 13),        // exit 0 · 3 lines
-             end: { x0: 2650, x1: 3690, landY: 0.42 } },               // pan + push 5.6-6.0 to a crop from
-                                                                        // "finished in 0.00s" to "exit 0 · 3 lines"
-    lands: { x: 232, bottom: 2190, target: cells(2, 9, 23, 23) }       // ● LANDED (the transcript landing line)
+    plans: { w: { a9x16: 1570, a1x1: 1570, a16x9: 1680 }, x: 232, bottom: 2160,
+             target: cells(2, 51, 25, 28) },                         // task panel: the 4-item plan
+    asks:  { w: { a9x16: 1320, a1x1: 1570, a16x9: 1680 }, x: 180,
+             bottom: { a9x16: 2330, a1x1: 2210, a16x9: 2210 },
+             target: cells(0, 20, 27, 28) },                         // ◎ CLEARANCE NEEDED / Edit src/main.rs
+    tests: { w: { a9x16: 1320, a1x1: 1400, a16x9: 1500 }, x: 200, cy: 950,
+             red: cells(8, 35, 10, 10),                              // "Command exited with code 101" (5.0-5.467)
+             target: cells(8, 32, 16, 16),                           // "test result: ok. 2 passed" (6.0)
+             end: { zoom: 1.15 } },                                  // push 5.6-6.0, left edge fixed, on the result row
+    lands: { w: { a9x16: 1320, a1x1: 1570, a16x9: 1680 }, x: 232, bottom: 2190,
+             target: cells(2, 9, 23, 23) }                           // ● LANDED (the transcript landing line)
   };
+  function pick(v) { return (v !== null && typeof v === "object") ? v[ASPECT] : v; }
 
   var inner = $("#win-inner");
   var IW = inner.clientWidth, IH = inner.clientHeight;
-  var S = IW / CROP_W;                        // footage scale in the window
-  var CROP_H = IH / S;
   var PADX = 14, PADY = 5;                    // bracket padding, px (rows sit close together)
 
-  function cropTop(shot) {
-    var top = shot.bottom !== undefined ? shot.bottom - CROP_H : shot.cy - CROP_H / 2;
-    return Math.min(Math.max(top, -60), SRC_H + 60 - CROP_H);
+  function cropTop(shot, s) {
+    var h = IH / s, bottom = pick(shot.bottom);
+    var top = bottom !== undefined ? bottom - h : shot.cy - h / 2;
+    return Math.min(Math.max(top, -60), SRC_H + 200 - h);
   }
   function camVars(left, top, s) { return { x: -left * s, y: -top * s, scale: s }; }
 
@@ -65,26 +70,34 @@
     { filter: "drop-shadow(0 0 8px rgba(0,240,255,0.40))", duration: 0.4, ease: "power2.out", immediateRender: false }, B.eyes);
 
   // ---------------------------------------------------------------- 1.0-9.0 the four acts
-  B.acts.forEach(function (a, i) {
+  function placeBrackets(el, t, cam) {
+    gsap.set(el, { left: (t.x0 - cam.left) * cam.s - PADX, top: (t.y0 - cam.top) * cam.s - PADY,
+                   width: (t.x1 - t.x0) * cam.s + 2 * PADX, height: (t.y1 - t.y0) * cam.s + 2 * PADY });
+  }
+  function snap(el, t0, t1) {                 // brackets snap in (scale 1.08 -> 1.0, 0.15 s) and cut out
+    tl.set(el, { autoAlpha: 1 }, t0 - EPS);
+    tl.fromTo(el, { scale: 1.08, transformOrigin: "50% 50%" },
+      { scale: 1, duration: 0.15, ease: EXPO, immediateRender: false }, t0);
+    if (t1 !== undefined) tl.set(el, { autoAlpha: 0 }, t1 - EPS);
+  }
+
+  B.acts.forEach(function (a) {
     var shot = SHOTS[a.id];
     var act = $("#act-" + a.id);
     var cam = $(".cam", act), push = $(".push", act), br = $(".brackets", act);
-    var top = cropTop(shot);
+    var S = IW / pick(shot.w);                // footage scale in the window
+    var top = cropTop(shot, S);
     var t = shot.target;
 
     // Camera: footage scaled into the window, crop's top-left at the window's top-left.
     var cam0 = { left: shot.x, top: top, s: S };
-    var cam1 = cam0;                         // the landed camera (tests: after the pan + push)
-    if (shot.end) {
-      var s1 = IW / (shot.end.x1 - shot.end.x0), tcy = (t.y0 + t.y1) / 2;
-      cam1 = { left: shot.end.x0, top: tcy - shot.end.landY * IH / s1, s: s1 };
+    var cam1 = cam0;                         // the landed camera (tests: after the push)
+    if (shot.end) {                          // zoom about (crop left edge, target row): the left edge stays put
+      var s1 = S * shot.end.zoom, ay = (t.y0 + t.y1) / 2;
+      cam1 = { left: shot.x, top: ay - (ay - top) * S / s1, s: s1 };
     }
     gsap.set(cam, camVars(cam0.left, cam0.top, cam0.s));
-
-    // Bracket box in window px at the landed camera.
-    var bl = (t.x0 - cam1.left) * cam1.s - PADX, bt = (t.y0 - cam1.top) * cam1.s - PADY;
-    var bw = (t.x1 - t.x0) * cam1.s + 2 * PADX, bh = (t.y1 - t.y0) * cam1.s + 2 * PADY;
-    gsap.set(br, { left: bl, top: bt, width: bw, height: bh });
+    placeBrackets(br, t, cam1);
 
     // Hard cuts on the downbeat: verb, label, footage act.
     cut(act, a.start, a.end);
@@ -95,24 +108,40 @@
     tl.fromTo(verb, { scale: 1.12 }, { scale: 1, duration: 0.25, ease: EXPO, immediateRender: false }, a.start);
     tl.set(verb, { autoAlpha: 0 }, a.end - EPS);
 
-    // Punch-in: cut in at 0.94 and push to 1.0, landing on beat 2.
-    var fx = shot.end ? 0.25 * IW : ((t.x0 + t.x1) / 2 - shot.x) * S;
-    var fy = ((t.y0 + t.y1) / 2 - top) * S;
+    // Punch-in: cut in at 0.94 and push to 1.0, landing on beat 2 (brackets ride inside the push).
+    var foc = shot.red || t;
+    var fx = ((foc.x0 + foc.x1) / 2 - shot.x) * S, fy = ((foc.y0 + foc.y1) / 2 - top) * S;
     tl.fromTo(push, { scale: 0.94, transformOrigin: fx + "px " + fy + "px" },
       { scale: 1, duration: 0.5, ease: "power3.out" }, a.start);
 
-    if (shot.end) {                          // tests: pan right + push 5.6-6.0, land on exit 0 on 6.0
+    if (shot.end) {                          // tests: push 5.6-6.0 onto the passing result, land on 6.0
       tl.fromTo(cam, camVars(cam0.left, cam0.top, cam0.s),
         Object.assign(camVars(cam1.left, cam1.top, cam1.s), { duration: 0.4, ease: "power3.inOut" }), 5.6);
     }
+    if (shot.red) {                          // tests: brackets on the red evidence until the re-run lands
+      var red = br.cloneNode(true);
+      red.classList.add("brackets-red");
+      push.appendChild(red);
+      placeBrackets(red, shot.red, cam0);
+      snap(red, a.start, B.exit0_film);
+    }
     // Brackets snap on the landing beat.
     var land = { plans: 1.5, asks: 3.5, tests: 6.0, lands: 7.5 }[a.id];
-    tl.set(br, { autoAlpha: 1 }, land - EPS);
-    tl.fromTo(br, { scale: 1.08, transformOrigin: "50% 50%" },
-      { scale: 1, duration: 0.15, ease: EXPO, immediateRender: false }, land);
-    var off = { asks: 4.6 }[a.id];             // card 1 leaves the screen at Y1 (4.6)
-    if (off) tl.set(br, { autoAlpha: 0 }, off - EPS);
+    snap(br, land, { asks: 4.6 }[a.id]);     // card 1 leaves the screen at Y1 (4.6)
   });
+
+  // Status chip (tests): `exit 101` (dim) over the red run; flips to `exit 0 · 2 passed` (signal,
+  // diamond pop) on the frame the re-run lands (B.exit0_film, glitch tick).
+  var G = B.exit0_film;
+  cut("#status", 5.0, 7.0);
+  tl.set("#status .st-ok", { autoAlpha: 0 }, 0);
+  tl.set("#status .st-red", { autoAlpha: 0 }, G - EPS);
+  tl.set("#status .st-ok", { autoAlpha: 1 }, G - EPS);
+  tl.fromTo("#status", { scale: 1.12, transformOrigin: "70% 50%" },
+    { scale: 1, duration: 0.25, ease: EXPO, immediateRender: false }, 5.0);
+  tl.fromTo("#status", { scale: 1.12 }, { scale: 1, duration: 0.25, ease: EXPO, immediateRender: false }, G);
+  tl.fromTo("#status .st-dot-ok", { scale: 0, transformOrigin: "50% 50%" },
+    { keyframes: [{ scale: 1.18, duration: 0.18, ease: "power2.out" }, { scale: 1, duration: 0.12, ease: "power2.inOut" }] }, G);
 
   // Keycap: y go, once at 4.5 (key-press + spark-micro).
   tl.set("#keycap", { autoAlpha: 1 }, B.keycap - EPS);

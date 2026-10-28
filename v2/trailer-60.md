@@ -60,7 +60,7 @@ control, so the edit (cuts, speed ramps, holds) is baked frame-exact into a 4K p
 
 Layout (all eight): `#09090B` field. Panel 1440x560 at (240, 260), `#18181B`, 1 px `#27272A`,
 radius 20 px, glow `radial-gradient(circle at 30% 20%, rgba(0,240,255,0.15) 0%, transparent 50%)`.
-Inside, x = 96 px: label (JetBrains Mono 500 22 px caps, `#71717A`, tracking 0.12em) at top 116;
+Inside, x = 96 px: label (JetBrains Mono 500 22 px caps, `#A1A1AA` — `#71717A` measured 3.1:1 on the glow, too faint —, tracking 0.12em) at top 116;
 headline Inter 700 80 px `#FAFAFA` at 188; detail JetBrains Mono 500 36 px `#A1A1AA` at 350, tokens
 in `#00F0FF` where marked `[...]`. Symbol C (140 px) top-right; its diamond rests at 0.3 and flashes
 to 1.0 on the downbeat.

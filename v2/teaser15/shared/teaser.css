@@ -67,6 +67,17 @@ html, body { overflow: hidden; background: var(--base); }
 .kc-label { font-family: var(--mono); font-weight: 500; color: var(--muted); white-space: nowrap; }
 .kc-spark { position: absolute; width: 24px; height: 24px; overflow: visible; opacity: 0; }
 
+/* Status chip (tests): same slot and build as the keycap. Two states stacked in one cell. */
+#status { position: absolute; display: grid; align-items: center; background: var(--panel); border: 2px solid var(--rule);
+          border-radius: 12px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.7), 0 2px 0 var(--rule); visibility: hidden; opacity: 0;
+          font-family: var(--mono); font-weight: 700; white-space: nowrap; }
+#status > span { grid-area: 1 / 1; display: flex; align-items: center; gap: 0.45em; }
+#status .st-red { color: var(--muted); }
+#status .st-dot { display: inline-block; width: 0.42em; height: 0.42em; border-radius: 50%; background: var(--faint); }
+#status .st-ok { color: var(--signal); }
+#status .st-dot-ok { width: 0.6em; height: 0.6em; overflow: visible; filter: drop-shadow(0 0 6px var(--glow)); }
+#status em { font-style: normal; font-weight: 500; color: var(--muted); }
+
 /* ---------- spark: Symbol C ---------- */
 #symbol-box { position: absolute; }
 #symbol { display: block; width: 100%; height: auto; overflow: visible; }
@@ -93,26 +104,27 @@ html, body { overflow: hidden; background: var(--base); }
 .a9x16 .bn-name { font-size: 96px; }
 .a9x16 .bn-tag { font-size: 34px; margin-top: 22px; }
 
-.a9x16 #verbs { left: 68px; top: 262px; }
+.a9x16 #verbs { left: 68px; top: 250px; }
 .a9x16 .verb { font-size: 200px; }
-.a9x16 #steps { left: 1008px; top: 330px; }
+.a9x16 #steps { left: 1008px; top: 318px; }
 .a9x16 .step { font-size: 28px; left: auto; right: 0; }
-.a9x16 #win { left: 40px; top: 500px; width: 1000px; height: 930px; }
-.a9x16 #keycap { right: 64px; top: 1360px; height: 136px; padding: 0 34px 0 18px; gap: 24px; }
+.a9x16 #win { left: 40px; top: 490px; width: 1000px; height: 1030px; }
+.a9x16 #keycap { right: 24px; top: 1380px; height: 132px; padding: 0 34px 0 18px; gap: 24px; }
+.a9x16 #status { right: 24px; top: 1380px; height: 132px; padding: 0 34px; font-size: 40px; }
 .a9x16 .kc-key { font-size: 64px; width: 96px; padding: 14px 0; }
 .a9x16 .kc-label { font-size: 32px; }
 .a9x16 .kc-spark { left: 58px; top: -16px; }
 
-.a9x16 #symbol-box { left: 160px; width: 760px; top: 540px; }
-.a9x16 #tagline { left: 72px; width: 936px; top: 1040px; font-size: 76px; }
+.a9x16 #symbol-box { left: 110px; width: 860px; top: 470px; }
+.a9x16 #tagline { left: 64px; width: 952px; top: 1010px; font-size: 84px; }
 .a9x16 #tagline span { display: block; }
 
-.a9x16 #lockup-box { left: 110px; width: 860px; top: 520px; }
-.a9x16 #subline { left: 0; width: 1080px; top: 830px; font-size: 42px; }
-.a9x16 #install { left: 64px; width: 952px; top: 950px; font-size: 28px; padding: 30px 34px; }
-.a9x16 #install .ch.nl::before { content: "\A"; }  /* break after -fsSL, shown with its char */
-.a9x16 #alt { left: 0; width: 1080px; top: 1200px; font-size: 30px; }
-.a9x16 #version { left: 0; width: 1080px; top: 1258px; font-size: 34px; }
+.a9x16 #lockup-box { left: 50px; width: 980px; top: 420px; }
+.a9x16 #subline { left: 0; width: 1080px; top: 744px; font-size: 46px; }
+.a9x16 #install { left: 64px; width: 952px; top: 860px; font-size: 40px; padding: 30px 40px; }
+.a9x16 #install .ch.nl1::before, .a9x16 #install .ch.nl2::before { content: "\A"; }  /* 3 lines; each break shows with its char */
+.a9x16 #alt { left: 0; width: 1080px; top: 1146px; font-size: 32px; }
+.a9x16 #version { left: 0; width: 1080px; top: 1204px; font-size: 40px; }
 
 /* =========================== 1:1 1080x1080 ===========================
    5% margins (54 px). */
@@ -128,6 +140,7 @@ html, body { overflow: hidden; background: var(--base); }
 .a1x1 .step { font-size: 24px; left: auto; right: 0; }
 .a1x1 #win { left: 54px; top: 236px; width: 972px; height: 790px; }
 .a1x1 #keycap { right: 76px; top: 900px; height: 116px; padding: 0 28px 0 14px; gap: 20px; }
+.a1x1 #status { right: 76px; top: 900px; height: 116px; padding: 0 30px; font-size: 34px; }
 .a1x1 .kc-key { font-size: 54px; width: 80px; padding: 11px 0; }
 .a1x1 .kc-label { font-size: 28px; }
 .a1x1 .kc-spark { left: 48px; top: -14px; }
@@ -139,7 +152,7 @@ html, body { overflow: hidden; background: var(--base); }
 .a1x1 #lockup-box { left: 160px; width: 760px; top: 206px; }
 .a1x1 #subline { left: 0; width: 1080px; top: 476px; font-size: 36px; }
 .a1x1 #install { left: 64px; width: 952px; top: 576px; font-size: 27px; padding: 26px 34px; }
-.a1x1 #install .ch.nl::before { content: "\A"; }
+.a1x1 #install .ch.nl1::before { content: "\A"; }
 .a1x1 #alt { left: 0; width: 1080px; top: 802px; font-size: 27px; }
 .a1x1 #version { left: 0; width: 1080px; top: 856px; font-size: 30px; }
 
@@ -156,6 +169,7 @@ html, body { overflow: hidden; background: var(--base); }
 .a16x9 .step { font-size: 24px; }
 .a16x9 #win { left: 760px; top: 72px; width: 1064px; height: 936px; }
 .a16x9 #keycap { right: 64px; top: 892px; height: 128px; padding: 0 32px 0 16px; gap: 22px; }
+.a16x9 #status { right: 64px; top: 892px; height: 128px; padding: 0 34px; font-size: 38px; }
 .a16x9 .kc-key { font-size: 60px; width: 90px; padding: 13px 0; }
 .a16x9 .kc-label { font-size: 30px; }
 .a16x9 .kc-spark { left: 54px; top: -15px; }

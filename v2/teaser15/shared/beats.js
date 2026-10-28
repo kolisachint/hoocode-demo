@@ -7,46 +7,78 @@ window.TEASER_BEATS = {
    "id": "plans",
    "start": 1.0,
    "end": 3.0,
-   "media": 5.9373,
-   "video_end": 3.0,
-   "still": null
+   "clips": [
+    {
+     "kind": "video",
+     "start": 1.0,
+     "end": 3.0,
+     "media": 5.9373
+    }
+   ]
   },
   {
    "id": "asks",
    "start": 3.0,
    "end": 5.0,
-   "media": 13.204,
-   "video_end": 4.8,
-   "still": {
-    "frame": 450,
-    "start": 4.8,
-    "end": 5.0,
-    "src": "assets/stills/asks-f0450.png"
-   }
+   "clips": [
+    {
+     "kind": "video",
+     "start": 3.0,
+     "end": 4.8,
+     "media": 13.204
+    },
+    {
+     "kind": "still",
+     "frame": 450,
+     "start": 4.8,
+     "end": 5.0,
+     "src": "assets/stills/f0450.png"
+    }
+   ]
   },
   {
    "id": "tests",
    "start": 5.0,
    "end": 7.0,
-   "media": 22.7707,
-   "video_end": 6.875,
-   "still": {
-    "frame": 739,
-    "start": 6.875,
-    "end": 7.0,
-    "src": "assets/stills/tests-f0739.png"
-   }
+   "red_frame": 683,
+   "clips": [
+    {
+     "kind": "still",
+     "frame": 683,
+     "start": 5.0,
+     "end": 5.466666666666667,
+     "src": "assets/stills/f0683.png"
+    },
+    {
+     "kind": "video",
+     "start": 5.466666666666667,
+     "end": 6.875,
+     "media": 23.2373
+    },
+    {
+     "kind": "still",
+     "frame": 739,
+     "start": 6.875,
+     "end": 7.0,
+     "src": "assets/stills/f0739.png"
+    }
+   ]
   },
   {
    "id": "lands",
    "start": 7.0,
    "end": 9.0,
-   "media": 26.604,
-   "video_end": 9.0,
-   "still": null
+   "clips": [
+    {
+     "kind": "video",
+     "start": 7.0,
+     "end": 9.0,
+     "media": 26.604
+    }
+   ]
   }
  ],
- "exit0_film": 5.4626,
+ "exit0_film": 5.4667,
  "eyes": 0.5,
  "keycap": 4.5,
  "spark": 9.0,
