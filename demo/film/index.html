@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HooCode launch film</title>
+<!--
+  HyperFrames composition (PLACEHOLDER: not verified against HyperFrames).
+  - Root: #stage with data-composition-id="hoocode-launch" and data-duration="45".
+  - Timeline: window.__timeline and window.__timelines.main. Labels: intro 0, mission 5, demo 9, outro 36, end 45.
+  - Video: ../out/hoocode.mp4 (made by `vhs demo/hoocode.tape`). Driven by the timeline's currentTime tween; never plays on its own.
+  - Browser preview: open with ?autoplay to play on load. Without it the timeline starts paused. Click the stage to toggle play.
+  - TODO: check the HyperFrames docs for the exact render-CLI flags, the expected viewport (1920x1080 here), fps, and how the composition is handed to the renderer. Nothing below has been checked against them.
+-->
+<style>
+  :root {
+    --bg: #05060d;
+    --fg: #e6e9f5;
+    --accent: #8fd3ff;
+    --dim: #6b7090;
+    --mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  #frame { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #stage {
+    position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden;
+    background: var(--bg); color: var(--fg); font-family: var(--sans);
+  }
+
+  /* CSS starfield: two layers of dots at different tile sizes (parallax). */
+  #stars {
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 120px 180px, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 430px 380px, #cfe8ff 50%, transparent 51%),
+      radial-gradient(2px 2px at 300px 90px, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 610px 260px, #bcd 50%, transparent 51%),
+      radial-gradient(1px 1px at 850px 470px, #fff 50%, transparent 51%),
+      radial-gradient(2px 2px at 760px 150px, #9cf 50%, transparent 51%),
+      radial-gradient(1px 1px at 180px 500px, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 520px 40px, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 940px 20px, #cfe8ff 50%, transparent 51%);
+    background-size: 960px 540px;
+  }
+  #stars-far {
+    background-image:
+      radial-gradient(1px 1px at 700px 900px, #fff 50%, transparent 51%),
+      radial-gradient(2px 2px at 1400px 300px, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 1150px 700px, #9cf 50%, transparent 51%),
+      radial-gradient(1px 1px at 1700px 120px, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 1560px 980px, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 280px 640px, #bcd 50%, transparent 51%);
+    background-size: 1920px 1080px;
+    opacity: 0.7;
+  }
+
+  .scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
+
+  /* Block wordmark: each glyph is a span (generated in JS). */
+  pre.wordmark {
+    margin: 0; font-family: var(--mono); line-height: 0.98; white-space: pre;
+    color: var(--fg); font-size: 140px; text-shadow: 0 0 40px rgba(143, 211, 255, 0.35);
+  }
+  pre.wordmark .ch { display: inline-block; }
+  pre.wordmark.small { font-size: 56px; text-shadow: none; color: var(--accent); }
+
+  /* Intro */
+  #scene-intro { display: flex; align-items: center; justify-content: center; }
+
+  /* Mission */
+  #scene-mission { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 56px; }
+  #mission-title { margin: 0; font-size: 96px; font-weight: 700; letter-spacing: 0.2em; color: var(--fg); }
+  #mission-sub { margin: 0; font-family: var(--mono); font-size: 28px; letter-spacing: 0.3em; color: var(--dim); }
+  #countdown { position: relative; width: 800px; height: 320px; }
+  #countdown span {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 300px; font-weight: 700; color: var(--accent);
+    opacity: 0;
+  }
+
+  /* Demo: terminal frame sized 1280x720 (scaled from the tape's 1600x900). */
+  #term {
+    position: absolute; left: 320px; top: 110px; width: 1280px; height: 720px;
+    border-radius: 14px; overflow: hidden; background: #1e1e2e;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(143, 211, 255, 0.15);
+    opacity: 0; visibility: hidden;
+  }
+  #term .bar {
+    height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #313244;
+  }
+  #term .bar i { width: 13px; height: 13px; border-radius: 50%; display: block; }
+  #term .bar i:nth-child(1) { background: #f38ba8; }
+  #term .bar i:nth-child(2) { background: #f9e2af; }
+  #term .bar i:nth-child(3) { background: #a6e3a1; }
+  #term video { display: block; width: 1280px; height: 680px; object-fit: contain; background: #1e1e2e; }
+  #captions { position: absolute; left: 0; right: 0; top: 870px; height: 110px; }
+  #captions .cap {
+    position: absolute; left: 0; right: 0; text-align: center; font-family: var(--mono);
+    font-size: 48px; letter-spacing: 0.04em; color: var(--fg); opacity: 0; visibility: hidden;
+  }
+  #captions .cap b { color: var(--accent); font-weight: 700; margin-right: 0.4em; }
+
+  /* Outro */
+  #scene-outro { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 56px; }
+  #install-box {
+    font-family: var(--mono); font-size: 46px; color: var(--fg); padding: 36px 52px;
+    border-radius: 14px; background: #11121c; border: 1px solid rgba(143, 211, 255, 0.3);
+    box-shadow: 0 0 60px rgba(143, 211, 255, 0.12); white-space: nowrap; opacity: 0;
+  }
+  #install-box .prompt { color: var(--accent); margin-right: 0.5em; }
+  #version { margin: 0; font-family: var(--mono); font-size: 52px; color: var(--accent); opacity: 0; letter-spacing: 0.08em; }
+</style>
+</head>
+<body>
+<div id="frame">
+<div id="stage" data-composition-id="hoocode-launch" data-duration="45">
+  <div id="stars"></div>
+  <div id="stars-far"></div>
+
+  <!-- 0:00 to 0:05 intro -->
+  <section class="scene" id="scene-intro">
+    <pre class="wordmark" id="wordmark" aria-label="HOO"></pre>
+  </section>
+
+  <!-- 0:05 to 0:09 mission -->
+  <section class="scene" id="scene-mission">
+    <h1 id="mission-title">MISSION CONTROL</h1>
+    <p id="mission-sub">LAUNCH SEQUENCE</p>
+    <div id="countdown">
+      <span>T-3</span><span>T-2</span><span>T-1</span><span>T-0</span>
+    </div>
+  </section>
+
+  <!-- 0:09 to 0:36 demo (clip is 25s of footage, held on last frame) -->
+  <section class="scene" id="scene-demo">
+    <div id="term">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <!-- PLACEHOLDER clip path. Make it with `vhs demo/hoocode.tape` first. -->
+      <video id="demo-video" src="../out/hoocode.mp4" muted playsinline preload="auto"></video>
+    </div>
+    <div id="captions">
+      <div class="cap" id="cap-1"><b>01</b>plans the task</div>
+      <div class="cap" id="cap-2"><b>02</b>runs the agent</div>
+      <div class="cap" id="cap-3"><b>03</b>opens the PR</div>
+    </div>
+  </section>
+
+  <!-- 0:36 to 0:45 outro -->
+  <section class="scene" id="scene-outro">
+    <pre class="wordmark small" id="wordmark-small" aria-label="HOO"></pre>
+    <!-- PLACEHOLDER install command (TODO: confirm the real install URL). -->
+    <div id="install-box"><span class="prompt">$</span><span id="install-cmd">curl -fsSL https://hoocode.dev/install.sh | sh</span></div>
+    <!-- PLACEHOLDER version (TODO: confirm). -->
+    <p id="version">v0.1.25</p>
+  </section>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  // Block glyphs for "HOO", 4 rows, 17 columns. Half blocks give the bevel.
+  var GLYPHS = [
+    "█   █ ▟▀▀▀▙ ▟▀▀▀▙",
+    "█   █ █   █ █   █",
+    "█▀▀▀█ █   █ █   █",
+    "█   █ ▜▄▄▄▛ ▜▄▄▄▛"
+  ];
+
+  // Deterministic pseudo-random (no Math.random, so seeked frames are repeatable).
+  function rnd(i) { var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+
+  // Build a <pre> wordmark where every character is its own span.
+  function buildWordmark(el) {
+    el.innerHTML = "";
+    var chars = [];
+    GLYPHS.forEach(function (row, r) {
+      Array.prototype.forEach.call(row, function (ch, c) {
+        var s = document.createElement("span");
+        s.className = "ch";
+        s.dataset.r = r;
+        s.dataset.c = c;
+        s.textContent = ch;
+        el.appendChild(s);
+        if (ch !== " ") chars.push(s);
+      });
+      el.appendChild(document.createTextNode("\n"));
+    });
+    return chars;
+  }
+
+  var stage = document.getElementById("stage");
+  var frame = document.getElementById("frame");
+  var video = document.getElementById("demo-video");
+  var introChars = buildWordmark(document.getElementById("wordmark"));
+  buildWordmark(document.getElementById("wordmark-small"));
+
+  // Random start offsets for the intro assembly.
+  var fromX = introChars.map(function (_, i) { return (rnd(i) - 0.5) * 1400; });
+  var fromY = introChars.map(function (_, i) { return (rnd(i + 99) - 0.5) * 900; });
+  var fromR = introChars.map(function (_, i) { return (rnd(i + 17) - 0.5) * 240; });
+
+  var tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
+  window.__timeline = tl;
+  window.__timelines = { main: tl };
+
+  tl.addLabel("intro", 0)
+    .addLabel("mission", 5)
+    .addLabel("demo", 9)
+    .addLabel("outro", 36);
+
+  // Starfield drift across the whole film.
+  tl.to("#stars", { backgroundPosition: "-300px -160px", duration: 45, ease: "none" }, 0);
+  tl.to("#stars-far", { backgroundPosition: "-120px -60px", duration: 45, ease: "none" }, 0);
+
+  // ---- intro (0 to 5) ----
+  tl.to("#scene-intro", { autoAlpha: 1, duration: 0.2 }, "intro");
+  tl.fromTo(introChars,
+    { x: function (i) { return fromX[i]; }, y: function (i) { return fromY[i]; },
+      rotation: function (i) { return fromR[i]; }, opacity: 0, scale: 0.2 },
+    { x: 0, y: 0, rotation: 0, opacity: 1, scale: 1, duration: 0.9, ease: "back.out(1.7)",
+      stagger: { each: 0.03, from: "center" } },
+    "intro+=0.3");
+  tl.to("#scene-intro", { autoAlpha: 0, duration: 0.4 }, "intro+=4.6");
+
+  // ---- mission (5 to 9) ----
+  tl.to("#scene-mission", { autoAlpha: 1, duration: 0.4 }, "mission");
+  tl.fromTo("#mission-title", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, "mission+=0.1");
+  tl.fromTo("#mission-sub", { opacity: 0 }, { opacity: 1, duration: 0.6 }, "mission+=0.4");
+  // Countdown: one number per second, each fades out before the next (seek-safe, no callbacks).
+  var counts = document.querySelectorAll("#countdown span");
+  counts.forEach(function (span, i) {
+    var t = 5 + i;
+    tl.fromTo(span, { opacity: 0, scale: 1.35 }, { opacity: 1, scale: 1, duration: 0.25 }, t);
+    tl.to(span, { opacity: 0, duration: 0.2 }, t + 0.8);
+  });
+  tl.to("#scene-mission", { autoAlpha: 0, duration: 0.4 }, "mission+=3.6");
+
+  // ---- demo (9 to 36) ----
+  tl.to("#scene-demo", { autoAlpha: 1, duration: 0.2 }, "demo");
+  tl.fromTo("#term", { y: 40, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "demo");
+  // Drive the clip frame by frame: clip time 0 to 25 over film 9 to 34, then it holds to 36.
+  tl.set(video, { currentTime: 0 }, "demo");
+  tl.to(video, { currentTime: 25, duration: 25, ease: "none" }, "demo");
+  // Captions in sequence (film times from the storyboard).
+  tl.fromTo("#cap-1", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 9.6);
+  tl.to("#cap-1", { autoAlpha: 0, duration: 0.3 }, 16.5);
+  tl.fromTo("#cap-2", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 17.4);
+  tl.to("#cap-2", { autoAlpha: 0, duration: 0.3 }, 25.5);
+  tl.fromTo("#cap-3", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 26.4);
+  tl.to("#cap-3", { autoAlpha: 0, duration: 0.3 }, 35.4);
+  tl.to("#scene-demo", { autoAlpha: 0, duration: 0.4 }, 35.6);
+
+  // ---- outro (36 to 45) ----
+  tl.to("#scene-outro", { autoAlpha: 1, duration: 0.4 }, 35.6);
+  tl.fromTo("#wordmark-small", { y: -30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "outro+=0.2");
+  tl.fromTo("#install-box", { y: 20, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "outro+=1.2");
+  tl.fromTo("#version", { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5 }, "outro+=2.6");
+
+  // Pin the total length to 45s (the timeline would otherwise end at the last tween).
+  tl.set({}, {}, 45);
+
+  // Fit the 1920x1080 stage into the window (preview only; a renderer viewport of 1920x1080 is a no-op).
+  function fit() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    frame.style.transform = "scale(" + s + ")";
+    frame.style.left = (window.innerWidth - 1920 * s) / 2 + "px";
+    frame.style.top = (window.innerHeight - 1080 * s) / 2 + "px";
+  }
+  window.addEventListener("resize", fit);
+  fit();
+
+  // Click or Space toggles play in the browser.
+  stage.addEventListener("click", function () { tl.paused() ? tl.play() : tl.pause(); });
+  window.addEventListener("keydown", function (e) {
+    if (e.code === "Space") { e.preventDefault(); tl.paused() ? tl.play() : tl.pause(); }
+  });
+
+  // ?autoplay: play on load in a browser. Without it the timeline stays paused at 0.
+  if (new URLSearchParams(window.location.search).has("autoplay")) {
+    tl.play(0);
+  }
+})();
+</script>
+</body>
+</html>
