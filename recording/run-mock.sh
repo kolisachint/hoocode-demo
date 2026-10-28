@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Run the real hoocode binary against the scripted mock LLM (demo/scenario.json),
-# in demo/sample-repo. Same setup as scripts/demo/record.py: a throwaway HOME with a
+# Run the real hoocode binary against the scripted mock LLM (recording/scenario.json),
+# in recording/sample-repo. Same setup as scripts/demo/record.py: a throwaway HOME with a
 # models.json for provider "demo" (api openai-completions, pointing at mockllm.py),
 # the same env, and the same argv. Only the model is scripted; tools run for real.
 #
-# Usage:  demo/run-mock.sh [hoocode args...]
-#         demo/run-mock.sh "Add a --json flag to the stats command"
+# Usage:  recording/run-mock.sh [hoocode args...]
+#         recording/run-mock.sh "Add a --json flag to the stats command"
 #
 # Env:    HOOCODE_BIN  binary to run (default: hoocode on PATH)
 #         HOOCODE_SRC  hoocode source clone, for scripts/tui/mockllm.py

@@ -2,23 +2,23 @@
 # HooCode launch demo: VHS tape (https://github.com/charmbracelet/vhs)
 #
 # Record (from the repo root, with a HooCode binary built from the clone):
-#   HOOCODE_BIN=/home/user/kolisachint/hoocode/target/release/hoocode vhs demo/hoocode.tape
+#   HOOCODE_BIN=/home/user/kolisachint/hoocode/target/release/hoocode vhs recording/hoocode.tape
 #
-# The run is deterministic: `hoocode` here is demo/run-mock.sh, which starts the
-# scripted mock LLM (scripts/tui/mockllm.py, turns in demo/scenario.json) and runs the
-# real binary against it in demo/sample-repo. Nothing is sent to a real model.
-# demo/reset-sample.sh restores the sample repo first, so every recording starts the same.
+# The run is deterministic: `hoocode` here is recording/run-mock.sh, which starts the
+# scripted mock LLM (scripts/tui/mockllm.py, turns in recording/scenario.json) and runs the
+# real binary against it in recording/sample-repo. Nothing is sent to a real model.
+# recording/reset-sample.sh restores the sample repo first, so every recording starts the same.
 #
 # Needs: VHS >= 0.8 (Wait+Screen), ttyd, ffmpeg, bash, cargo, python3.
-# Output dir must exist: mkdir -p demo/out
+# Output dir must exist: mkdir -p out (run vhs from the repo root: Output paths are relative to it)
 #
-# Timing map: clip time c is film time 9 + c (see demo/storyboard.md). The clip times in
+# Timing map: clip time c is film time 9 + c (see trailer/storyboard.md). The clip times in
 # the comments are estimates until the first real recording; the film's caption times are
 # set in film/index.html. The Wait+Screen timeouts are generous.
 # =====================================================================
 
-Output demo/out/hoocode.mp4
-Output demo/out/hoocode.gif
+Output out/hoocode.mp4
+Output out/hoocode.gif
 
 Set Shell "bash"
 Set FontSize 22
@@ -32,7 +32,7 @@ Set Theme { "name": "HooCode dark", "background": "#09090B", "foreground": "#FAF
 
 # --- Setup (hidden, not recorded) ---------------------------------------
 Hide
-Type "demo/reset-sample.sh && cd demo/sample-repo && PS1='$ ' && clear"
+Type "recording/reset-sample.sh && cd recording/sample-repo && PS1='$ ' && clear"
 Enter
 # The typed command runs the mock-backed launcher. Its args are the task text.
 Type 'hoocode() { ../run-mock.sh "$@"; }'

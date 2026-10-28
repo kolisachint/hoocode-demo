@@ -1,0 +1,13 @@
+# Generated video in out/: keep the recording, the GIF, the trailer and the placeholder.
+out/*
+!out/.gitkeep
+!out/hoocode.mp4
+!out/hoocode.gif
+!out/trailer.mp4
+
+# Recording sample repo: build output
+recording/sample-repo/target
+
+# HyperFrames render and check artifacts
+trailer/.hyperframes/
+trailer/node_modules/

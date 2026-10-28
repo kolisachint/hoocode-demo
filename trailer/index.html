@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HooCode launch film</title>
+<meta name="viewport" content="width=1920, height=1080">
+<title>HooCode launch trailer</title>
 <!--
-  HyperFrames composition (draft, not yet rendered with HyperFrames).
-  - Root: #stage with data-composition-id="hoocode-launch" and data-duration="45".
-  - Timeline: window.__timeline and window.__timelines.main. Labels: intro 0, mission 5, demo 9, outro 36.
-  - Wordmark: the exact 3-row HooCode glyph from crates/hoocode-code-tui-app/src/wordmark.rs,
-    each column coloured from #5cc8bb (accent) to #9b8cff (violet), as the TUI paints it.
-  - Video: ../out/hoocode.mp4 (from `vhs demo/hoocode.tape`). Driven by the timeline's currentTime tween.
-  - Browser preview: ?autoplay plays on load. Click the stage or press Space to toggle.
-  - Brand colours (brand SVG): bg #09090B, ink #FAFAFA, muted #A1A1AA, accent #00F0FF, rule #27272A.
+  HyperFrames composition: the 45s HooCode launch trailer (see README.md, storyboard.md).
+  - Root: #stage, data-composition-id="hoocode-trailer", 1920x1080, 30 fps, 45 s.
+  - Timeline: one paused GSAP timeline registered on window.__timelines. Scripts never play,
+    pause or seek media: the runtime drives the <video> from the timeline.
+  - Recording: assets/hoocode.mp4, a symlink to ../out/hoocode.mp4 (made by `vhs recording/hoocode.tape`).
+    It is 21.6 s long and plays from 9 s. Its last frame is held to 36 s by assets/last-frame.png (see trailer/README.md).
+  - Colours and text: brand/brand.json. Wordmark rows: brand/wordmark.txt.
 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
   :root {
     --bg: #09090B;
@@ -24,11 +24,15 @@
     --mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
     --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
-  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
-  #frame { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 1920px; height: 1080px; overflow: hidden;
+    background: var(--bg);
+  }
+
   #stage {
-    position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden;
-    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+    overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--sans);
   }
 
   /* Faint starfield, two parallax layers, in the rule colour. */
@@ -83,21 +87,21 @@
     opacity: 0;
   }
 
-  /* Demo: terminal frame sized 1280x720 (scaled from the tape's 1600x900). */
+  /* Demo: the recording sits in a 1280x720 frame. VHS already draws the window bar, so there is no bar here. */
   #term {
     position: absolute; left: 320px; top: 110px; width: 1280px; height: 720px;
-    border-radius: 14px; overflow: hidden; background: #09090B;
+    border-radius: 14px; overflow: hidden; background: var(--bg);
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--rule);
     opacity: 0; visibility: hidden;
   }
-  #term .bar {
-    height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #16161f;
+  #demo-video {
+    position: absolute; left: 0; top: 0; width: 1280px; height: 720px;
+    object-fit: contain; background: var(--bg); display: block;
   }
-  #term .bar i { width: 13px; height: 13px; border-radius: 50%; display: block; }
-  #term .bar i:nth-child(1) { background: #d58181; }
-  #term .bar i:nth-child(2) { background: #f0c674; }
-  #term .bar i:nth-child(3) { background: #b5bd68; }
-  #term video { display: block; width: 1280px; height: 680px; object-fit: contain; background: #09090B; }
+  #demo-hold {
+    position: absolute; left: 0; top: 0; width: 1280px; height: 720px;
+    object-fit: contain; background: var(--bg); display: block;
+  }
   #captions { position: absolute; left: 0; right: 0; top: 870px; height: 110px; }
   #captions .cap {
     position: absolute; left: 0; right: 0; text-align: center; font-family: var(--mono);
@@ -114,14 +118,13 @@
     white-space: nowrap; opacity: 0;
   }
   #install-box .prompt { color: var(--accent); margin-right: 0.5em; }
-  #alt-install { margin: 0; font-family: var(--mono); font-size: 26px; color: var(--muted); opacity: 0; }
+  #alt-install { margin: 0; font-family: var(--mono); font-size: 28px; color: var(--muted); opacity: 0; }
   #version { margin: 0; font-family: var(--mono); font-size: 52px; color: var(--accent); opacity: 0; letter-spacing: 0.08em; }
   #tagline { margin: 0; font-size: 34px; color: var(--ink); opacity: 0; letter-spacing: 0.01em; }
 </style>
 </head>
 <body>
-<div id="frame">
-<div id="stage" data-composition-id="hoocode-launch" data-duration="45">
+<div id="stage" data-composition-id="hoocode-trailer" data-start="0" data-duration="45" data-fps="30" data-width="1920" data-height="1080">
   <div id="stars"></div>
   <div id="stars-far"></div>
 
@@ -143,11 +146,12 @@
     </div>
   </section>
 
-  <!-- 0:09 to 0:36 demo (the clip is 21.6s at 1x, held on its last frame) -->
+  <!-- 0:09 to 0:36 demo. The recording is 21.6 s; it plays from 9 s and its last frame is held to 36 s.
+       Only the <video> and the hold still are timed clips; the scene and caption tweens show them. -->
   <section class="scene" id="scene-demo">
     <div id="term">
-      <div class="bar"><i></i><i></i><i></i></div>
-      <video id="demo-video" src="../out/hoocode.mp4" muted playsinline preload="auto"></video>
+      <video id="demo-video" class="clip" data-start="9" data-duration="27" data-track-index="1" src="assets/hoocode.mp4" muted playsinline preload="auto"></video>
+      <img id="demo-hold" class="clip" data-start="30.6" data-duration="5.4" data-track-index="1" src="assets/last-frame.png" alt="">
     </div>
     <div id="captions">
       <div class="cap" id="cap-1"><b>01</b>plans the mission</div>
@@ -165,20 +169,18 @@
     <p id="tagline">nothing applied without your say-so</p>
   </section>
 </div>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
 (function () {
-  // The exact wordmark (crates/hoocode-code-tui-app/src/wordmark.rs): 3 rows, 7 columns.
+  // The exact wordmark, as in brand/wordmark.txt: 3 rows, 7 columns.
   var ROWS = ["▟▀▀▀▀▀▙", "▌▟▙ ▟▙▐", "▜▄▄▄▄▄▛"];
-  var ACCENT = [0x5c, 0xc8, 0xbb];   // #5cc8bb
-  var VIOLET = [0x9b, 0x8c, 0xff];   // #9b8cff
+  var ACCENT = [0x5c, 0xc8, 0xbb];   // #5cc8bb (brand.json gradient start)
+  var VIOLET = [0x9b, 0x8c, 0xff];   // #9b8cff (brand.json gradient end)
 
   function hex(c) { return "#" + c.map(function (v) { return Math.round(v).toString(16).padStart(2, "0"); }).join(""); }
   function lerp(a, b, t) { return [0, 1, 2].map(function (i) { return a[i] + (b[i] - a[i]) * t; }); }
 
-  // Deterministic pseudo-random (no Math.random, so seeked frames repeat).
+  // Deterministic pseudo-random (no Math.random, so every frame renders the same way).
   function rnd(i) { var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
 
   // Build a <pre> wordmark: one span per character, coloured by column.
@@ -200,9 +202,6 @@
     return animated;
   }
 
-  var stage = document.getElementById("stage");
-  var frame = document.getElementById("frame");
-  var video = document.getElementById("demo-video");
   var introChars = buildWordmark(document.getElementById("wordmark"));
   buildWordmark(document.getElementById("wordmark-small"));
 
@@ -211,15 +210,15 @@
   var fromR = introChars.map(function (_, i) { return (rnd(i + 17) - 0.5) * 240; });
 
   var tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
-  window.__timeline = tl;
-  window.__timelines = { main: tl };
+  window.__timelines = window.__timelines || {};
+  window.__timelines["hoocode-trailer"] = tl;
 
   tl.addLabel("intro", 0)
     .addLabel("mission", 5)
     .addLabel("demo", 9)
     .addLabel("outro", 36);
 
-  // Starfield drift across the film.
+  // Starfield drift across the trailer.
   tl.to("#stars", { backgroundPosition: "-300px -160px", duration: 45, ease: "none" }, 0);
   tl.to("#stars-far", { backgroundPosition: "-120px -60px", duration: 45, ease: "none" }, 0);
 
@@ -232,7 +231,6 @@
       stagger: { each: 0.03, from: "center" } },
     "intro+=0.3");
   // The name and the version line "type in": a stepped clip-path reveal, one step per character.
-  // Plain tweens only (no onUpdate), so seek() renders the same frame at any time.
   tl.fromTo("#brand-name", { clipPath: "inset(0% 100% 0% 0%)" },
     { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, ease: "steps(7)" }, "intro+=1.2");
   tl.fromTo("#brand-sub", { clipPath: "inset(0% 100% 0% 0%)" },
@@ -253,12 +251,10 @@
   tl.to("#scene-mission", { autoAlpha: 0, duration: 0.4 }, "mission+=3.6");
 
   // ---- demo (9 to 36) ----
+  // The <video> is driven by the runtime from its data-start; no media tween here.
   tl.to("#scene-demo", { autoAlpha: 1, duration: 0.2 }, "demo");
   tl.fromTo("#term", { y: 40, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "demo");
-  // The clip runs from its start over film 9 to 34, then holds to 36.
-  tl.set(video, { currentTime: 0 }, "demo");
-  tl.to(video, { currentTime: 21.6, duration: 21.6, ease: "none" }, "demo");  // clip is 21.6s at 1x; holds its last frame after
-  // Captions, in order.
+  // Captions, in order (cue times: 01 14.6-20.4, 02 21.2-25.0, 03 25.6-35.4).
   tl.fromTo("#cap-1", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 14.6);
   tl.to("#cap-1", { autoAlpha: 0, duration: 0.3 }, 20.4);
   tl.fromTo("#cap-2", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 21.2);
@@ -277,27 +273,6 @@
 
   // Pin the total length to 45s.
   tl.set({}, {}, 45);
-
-  // Fit the 1920x1080 stage into the window (preview only).
-  function fit() {
-    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-    frame.style.transform = "scale(" + s + ")";
-    frame.style.left = (window.innerWidth - 1920 * s) / 2 + "px";
-    frame.style.top = (window.innerHeight - 1080 * s) / 2 + "px";
-  }
-  window.addEventListener("resize", fit);
-  fit();
-
-  // Click or Space toggles play in the browser.
-  stage.addEventListener("click", function () { tl.paused() ? tl.play() : tl.pause(); });
-  window.addEventListener("keydown", function (e) {
-    if (e.code === "Space") { e.preventDefault(); tl.paused() ? tl.play() : tl.pause(); }
-  });
-
-  // ?autoplay: play on load. Without it the timeline stays paused at 0.
-  if (new URLSearchParams(window.location.search).has("autoplay")) {
-    tl.play(0);
-  }
 })();
 </script>
 </body>
