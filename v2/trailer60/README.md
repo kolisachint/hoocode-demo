@@ -28,7 +28,7 @@ python3 v2/trailer60/build.py --plate
 # 2. score (music on the fixed 120 BPM grid + SFX from events.json), ~50 s
 python3 v2/music/score.py --film trailer60 --events v2/trailer60/events.json
 
-# 3. picture (silent), ~20-25 min on 4 cores
+# 3. picture (silent), ~3-4 min on 4 cores
 cd v2/trailer60
 npx -y hyperframes@0.8.210 lint
 PUPPETEER_EXECUTABLE_PATH=/opt/pw-browsers/chromium npx -y hyperframes@0.8.210 render \

@@ -12,3 +12,4 @@ recording/sample-repo/target
 trailer/.hyperframes/
 trailer/node_modules/
 preview/
+__pycache__/
