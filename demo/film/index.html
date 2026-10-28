@@ -143,7 +143,7 @@
     </div>
   </section>
 
-  <!-- 0:09 to 0:36 demo (the clip is about 25s of footage, held on its last frame) -->
+  <!-- 0:09 to 0:36 demo (the clip is 21.6s at 1x, held on its last frame) -->
   <section class="scene" id="scene-demo">
     <div id="term">
       <div class="bar"><i></i><i></i><i></i></div>
@@ -257,13 +257,13 @@
   tl.fromTo("#term", { y: 40, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "demo");
   // The clip runs from its start over film 9 to 34, then holds to 36.
   tl.set(video, { currentTime: 0 }, "demo");
-  tl.to(video, { currentTime: 25, duration: 25, ease: "none" }, "demo");
+  tl.to(video, { currentTime: 21.6, duration: 21.6, ease: "none" }, "demo");  // clip is 21.6s at 1x; holds its last frame after
   // Captions, in order.
-  tl.fromTo("#cap-1", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 9.6);
-  tl.to("#cap-1", { autoAlpha: 0, duration: 0.3 }, 16.5);
-  tl.fromTo("#cap-2", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 17.4);
-  tl.to("#cap-2", { autoAlpha: 0, duration: 0.3 }, 25.5);
-  tl.fromTo("#cap-3", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 26.4);
+  tl.fromTo("#cap-1", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 14.6);
+  tl.to("#cap-1", { autoAlpha: 0, duration: 0.3 }, 20.4);
+  tl.fromTo("#cap-2", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 21.2);
+  tl.to("#cap-2", { autoAlpha: 0, duration: 0.3 }, 25.0);
+  tl.fromTo("#cap-3", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 25.6);
   tl.to("#cap-3", { autoAlpha: 0, duration: 0.3 }, 35.4);
   tl.to("#scene-demo", { autoAlpha: 0, duration: 0.4 }, 35.6);
 

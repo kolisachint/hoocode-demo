@@ -41,30 +41,30 @@ Type "clear"
 Enter
 Show
 
-# --- Scene A: launch (clip 0-1s; film 9-10s, caption "01 plans the mission" from film 9.6s) ---
+# --- Scene A: launch (clip 0-1s; film 9-10s, caption "01 plans the mission" from film 14.6s) ---
 Sleep 1s
 Type 'hoocode "Add a --json flag to the stats command"'
 Sleep 500ms
 Enter
 
-# --- Scene B: plan (clip 2-8s; film 11-17s, caption 01 on screen) ------------
-# The scripted turn 1 writes the plan with TodoWrite, which fills the FLIGHT PLAN panel.
-Wait+Screen@60s /FLIGHT PLAN|Plan/
+# --- Scene B: plan (clip ~4-6s; film ~13-15s, caption 01 on screen) ------------
+# The scripted turn 1 writes the plan with TodoWrite. The rail shows "TodoWrite  4 items".
+Wait+Screen@60s /TodoWrite\s+4 items/
 Sleep 2s
 
-# --- Scene C: clearance for the edit (clip 8-12s; caption 02 from film 17.4s) ---
+# --- Scene C: clearance for the edit (clip ~12-13s; caption 02 from film ~21s) ---
 # Read runs without approval. The Edit waits for "y go, once".
-Wait+Screen@60s /CLEARANCE NEEDED/
+Wait+Screen@60s /BUILD asks for Edit/
 Sleep 2s
 Type "y"
 Sleep 1s
 
-# --- Scene D: clearance for cargo test (clip 12-16s; caption 02 still on screen) ---
-Wait+Screen@90s /CLEARANCE NEEDED/
+# --- Scene D: clearance for cargo test (clip ~13.3-16s; caption 02 still on screen) ---
+Wait+Screen@90s /BUILD asks for Shell/
 Sleep 2s
 Type "y"
 
-# --- Scene E: the test run and the landing (clip 16-26s; caption 03 from film 26.4s) ---
+# --- Scene E: the test run and the landing (clip ~16.4s exit 0, ~19s LANDED; caption 03 from film ~25.8s) ---
 Wait+Screen@180s /exit 0/
 Sleep 1500ms
 Wait+Screen@120s /LANDED/
