@@ -1,0 +1,73 @@
+# =====================================================================
+# HooCode launch demo: VHS tape (https://github.com/charmbracelet/vhs)
+#
+# Record (from the repo root, with a HooCode binary built from the clone):
+#   HOOCODE_BIN=/home/user/kolisachint/hoocode/target/release/hoocode vhs recording/hoocode.tape
+#
+# The run is deterministic: `hoocode` here is recording/run-mock.sh, which starts the
+# scripted mock LLM (scripts/tui/mockllm.py, turns in recording/scenario.json) and runs the
+# real binary against it in recording/sample-repo. Nothing is sent to a real model.
+# recording/reset-sample.sh restores the sample repo first, so every recording starts the same.
+#
+# Needs: VHS >= 0.8 (Wait+Screen), ttyd, ffmpeg, bash, cargo, python3.
+# Output dir must exist: mkdir -p out (run vhs from the repo root: Output paths are relative to it)
+#
+# Timing map: clip time c is film time 9 + c (see trailer/storyboard.md). The clip times in
+# the comments are estimates until the first real recording; the film's caption times are
+# set in film/index.html. The Wait+Screen timeouts are generous.
+# =====================================================================
+
+Output out/hoocode.mp4
+Output out/hoocode.gif
+
+Set Shell "bash"
+Set FontSize 22
+Set Width 1600
+Set Height 900
+Set Padding 24
+Set WindowBar Colorful
+Set TypingSpeed 45ms
+# dark.json (crates/hoocode-code-tui-theme/themes/dark.json) on the brand background #09090B.
+Set Theme { "name": "HooCode dark", "background": "#09090B", "foreground": "#FAFAFA", "selection": "#2a2a36", "cursor": "#00F0FF", "cursorAccent": "#09090B", "black": "#16161f", "red": "#d58181", "green": "#b5bd68", "yellow": "#f0c674", "blue": "#6e93ff", "magenta": "#9b8cff", "cyan": "#5cc8bb", "white": "#a8a8a8", "brightBlack": "#757575", "brightRed": "#e8a0a0", "brightGreen": "#c9d88a", "brightYellow": "#ffff00", "brightBlue": "#8fb0ff", "brightMagenta": "#b8acff", "brightCyan": "#7fe0d5", "brightWhite": "#FAFAFA" }
+
+# --- Setup (hidden, not recorded) ---------------------------------------
+Hide
+Type "recording/reset-sample.sh && cd recording/sample-repo && PS1='$ ' && clear"
+Enter
+# The typed command runs the mock-backed launcher. Its args are the task text.
+Type 'hoocode() { ../run-mock.sh "$@"; }'
+Enter
+Type "clear"
+Enter
+Show
+
+# --- Scene A: launch (clip 0-1s; film 9-10s, caption "01 plans the mission" from film 14.6s) ---
+Sleep 1s
+Type 'hoocode "Add a --json flag to the stats command"'
+Sleep 500ms
+Enter
+
+# --- Scene B: plan (clip ~4-6s; film ~13-15s, caption 01 on screen) ------------
+# The scripted turn 1 writes the plan with TodoWrite. The rail shows "TodoWrite  4 items".
+Wait+Screen@60s /TodoWrite\s+4 items/
+Sleep 2s
+
+# --- Scene C: clearance for the edit (clip ~12-13s; caption 02 from film ~21s) ---
+# Read runs without approval. The Edit waits for "y go, once".
+Wait+Screen@60s /BUILD asks for Edit/
+Sleep 2s
+Type "y"
+Sleep 1s
+
+# --- Scene D: clearance for cargo test (clip ~13.3-16s; caption 02 still on screen) ---
+Wait+Screen@90s /BUILD asks for Shell/
+Sleep 2s
+Type "y"
+
+# --- Scene E: the test run and the landing (clip ~16.4s exit 0, ~19s LANDED; caption 03 from film ~25.8s) ---
+Wait+Screen@180s /exit 0/
+Sleep 1500ms
+Wait+Screen@120s /LANDED/
+Sleep 3s
+
+Ctrl+D

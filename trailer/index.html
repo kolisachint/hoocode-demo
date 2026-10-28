@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>HooCode launch trailer</title>
+<!--
+  HyperFrames composition: the 45s HooCode launch trailer (see README.md, storyboard.md).
+  - Root: #stage, data-composition-id="hoocode-trailer", 1920x1080, 30 fps, 45 s.
+  - Timeline: one paused GSAP timeline registered on window.__timelines. Scripts never play,
+    pause or seek media: the runtime drives the <video> from the timeline.
+  - Recording: assets/hoocode.mp4, a symlink to ../out/hoocode.mp4 (made by `vhs recording/hoocode.tape`).
+    It is 21.6 s long and plays from 9 s. Its last frame is held to 36 s by assets/last-frame.png (see trailer/README.md).
+  - Colours and text: brand/brand.json. Wordmark rows: brand/wordmark.txt.
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  :root {
+    --bg: #09090B;
+    --ink: #FAFAFA;
+    --muted: #A1A1AA;
+    --accent: #00F0FF;
+    --rule: #27272A;
+    --mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 1920px; height: 1080px; overflow: hidden;
+    background: var(--bg);
+  }
+
+  #stage {
+    position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+    overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--sans);
+  }
+
+  /* Faint starfield, two parallax layers, in the rule colour. */
+  #stars {
+    position: absolute; inset: 0; opacity: 0.8;
+    background-image:
+      radial-gradient(1px 1px at 120px 180px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 430px 380px, #3f3f46 50%, transparent 51%),
+      radial-gradient(2px 2px at 300px 90px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 610px 260px, #3f3f46 50%, transparent 51%),
+      radial-gradient(1px 1px at 850px 470px, #27272A 50%, transparent 51%),
+      radial-gradient(2px 2px at 760px 150px, #3f3f46 50%, transparent 51%),
+      radial-gradient(1px 1px at 180px 500px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 520px 40px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 940px 20px, #3f3f46 50%, transparent 51%);
+    background-size: 960px 540px;
+  }
+  #stars-far {
+    background-image:
+      radial-gradient(1px 1px at 700px 900px, #27272A 50%, transparent 51%),
+      radial-gradient(2px 2px at 1400px 300px, #3f3f46 50%, transparent 51%),
+      radial-gradient(1px 1px at 1150px 700px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 1700px 120px, #3f3f46 50%, transparent 51%),
+      radial-gradient(1px 1px at 1560px 980px, #27272A 50%, transparent 51%),
+      radial-gradient(1px 1px at 280px 640px, #3f3f46 50%, transparent 51%);
+    background-size: 1920px 1080px;
+    opacity: 0.6;
+  }
+
+  .scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
+
+  /* The wordmark: each character is its own span (built in JS). */
+  pre.wordmark { margin: 0; font-family: var(--mono); line-height: 1; white-space: pre; }
+  pre.wordmark .ch { display: inline-block; }
+
+  /* Intro: wordmark beside the name and the version line. */
+  #scene-intro { display: flex; align-items: center; justify-content: center; gap: 72px; }
+  #wordmark { font-size: 190px; }
+  #brand { display: flex; flex-direction: column; gap: 22px; }
+  #brand-name { margin: 0; font-family: var(--sans); font-size: 150px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--ink); min-height: 150px; }
+  #brand-sub { margin: 0; font-family: var(--mono); font-size: 42px; color: var(--muted); min-height: 52px; }
+  #brand-sub .dot { color: var(--accent); }
+
+  /* Mission */
+  #scene-mission { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 56px; }
+  #mission-title { margin: 0; font-size: 96px; font-weight: 700; letter-spacing: 0.2em; color: var(--ink); }
+  #mission-sub { margin: 0; font-family: var(--mono); font-size: 28px; letter-spacing: 0.3em; color: var(--muted); }
+  #countdown { position: relative; width: 800px; height: 320px; }
+  #countdown span {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 300px; font-weight: 700; color: var(--accent);
+    opacity: 0;
+  }
+
+  /* Demo: the recording sits in a 1280x720 frame. VHS already draws the window bar, so there is no bar here. */
+  #term {
+    position: absolute; left: 320px; top: 110px; width: 1280px; height: 720px;
+    border-radius: 14px; overflow: hidden; background: var(--bg);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--rule);
+    opacity: 0; visibility: hidden;
+  }
+  #demo-video {
+    position: absolute; left: 0; top: 0; width: 1280px; height: 720px;
+    object-fit: contain; background: var(--bg); display: block;
+  }
+  #demo-hold {
+    position: absolute; left: 0; top: 0; width: 1280px; height: 720px;
+    object-fit: contain; background: var(--bg); display: block;
+  }
+  #captions { position: absolute; left: 0; right: 0; top: 870px; height: 110px; }
+  #captions .cap {
+    position: absolute; left: 0; right: 0; text-align: center; font-family: var(--mono);
+    font-size: 48px; letter-spacing: 0.04em; color: var(--ink); opacity: 0; visibility: hidden;
+  }
+  #captions .cap b { color: var(--accent); font-weight: 700; margin-right: 0.4em; }
+
+  /* Outro */
+  #scene-outro { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 44px; }
+  #wordmark-small { font-size: 64px; }
+  #install-box {
+    font-family: var(--mono); font-size: 38px; color: var(--ink); padding: 34px 50px;
+    border-radius: 14px; background: #111113; border: 1px solid var(--rule);
+    white-space: nowrap; opacity: 0;
+  }
+  #install-box .prompt { color: var(--accent); margin-right: 0.5em; }
+  #alt-install { margin: 0; font-family: var(--mono); font-size: 28px; color: var(--muted); opacity: 0; }
+  #version { margin: 0; font-family: var(--mono); font-size: 52px; color: var(--accent); opacity: 0; letter-spacing: 0.08em; }
+  #tagline { margin: 0; font-size: 34px; color: var(--ink); opacity: 0; letter-spacing: 0.01em; }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="hoocode-trailer" data-start="0" data-duration="45" data-fps="30" data-width="1920" data-height="1080">
+  <div id="stars"></div>
+  <div id="stars-far"></div>
+
+  <!-- 0:00 to 0:05 intro -->
+  <section class="scene" id="scene-intro">
+    <pre class="wordmark" id="wordmark" aria-label="HooCode"></pre>
+    <div id="brand">
+      <p id="brand-name">hoocode</p>
+      <p id="brand-sub">coding agent <span class="dot">&middot;</span> v0.2.20</p>
+    </div>
+  </section>
+
+  <!-- 0:05 to 0:09 mission -->
+  <section class="scene" id="scene-mission">
+    <h1 id="mission-title">MISSION CONTROL</h1>
+    <p id="mission-sub">LAUNCH SEQUENCE</p>
+    <div id="countdown">
+      <span>T-3</span><span>T-2</span><span>T-1</span><span>T-0</span>
+    </div>
+  </section>
+
+  <!-- 0:09 to 0:36 demo. The recording is 21.6 s; it plays from 9 s and its last frame is held to 36 s.
+       Only the <video> and the hold still are timed clips; the scene and caption tweens show them. -->
+  <section class="scene" id="scene-demo">
+    <div id="term">
+      <video id="demo-video" class="clip" data-start="9" data-duration="27" data-track-index="1" src="assets/hoocode.mp4" muted playsinline preload="auto"></video>
+      <img id="demo-hold" class="clip" data-start="30.6" data-duration="5.4" data-track-index="1" src="assets/last-frame.png" alt="">
+    </div>
+    <div id="captions">
+      <div class="cap" id="cap-1"><b>01</b>plans the mission</div>
+      <div class="cap" id="cap-2"><b>02</b>asks clearance before it acts</div>
+      <div class="cap" id="cap-3"><b>03</b>runs the tests and lands it</div>
+    </div>
+  </section>
+
+  <!-- 0:36 to 0:45 outro -->
+  <section class="scene" id="scene-outro">
+    <pre class="wordmark" id="wordmark-small" aria-label="HooCode"></pre>
+    <div id="install-box"><span class="prompt">$</span><span id="install-cmd">curl -fsSL https://kolisachint.github.io/hoocode/install.sh | sh</span></div>
+    <p id="alt-install">or npm i -g hoocode &middot; pip install hoocode</p>
+    <p id="version">v0.2.20</p>
+    <p id="tagline">nothing applied without your say-so</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  // The exact wordmark, as in brand/wordmark.txt: 3 rows, 7 columns.
+  var ROWS = ["▟▀▀▀▀▀▙", "▌▟▙ ▟▙▐", "▜▄▄▄▄▄▛"];
+  var ACCENT = [0x5c, 0xc8, 0xbb];   // #5cc8bb (brand.json gradient start)
+  var VIOLET = [0x9b, 0x8c, 0xff];   // #9b8cff (brand.json gradient end)
+
+  function hex(c) { return "#" + c.map(function (v) { return Math.round(v).toString(16).padStart(2, "0"); }).join(""); }
+  function lerp(a, b, t) { return [0, 1, 2].map(function (i) { return a[i] + (b[i] - a[i]) * t; }); }
+
+  // Deterministic pseudo-random (no Math.random, so every frame renders the same way).
+  function rnd(i) { var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+
+  // Build a <pre> wordmark: one span per character, coloured by column.
+  function buildWordmark(el) {
+    el.innerHTML = "";
+    var cols = ROWS[0].length;
+    var animated = [];
+    ROWS.forEach(function (row, r) {
+      Array.prototype.forEach.call(row, function (ch, c) {
+        var s = document.createElement("span");
+        s.className = "ch";
+        s.textContent = ch;
+        s.style.color = hex(lerp(ACCENT, VIOLET, c / (cols - 1)));
+        el.appendChild(s);
+        if (ch !== " ") animated.push(s);
+      });
+      el.appendChild(document.createTextNode("\n"));
+    });
+    return animated;
+  }
+
+  var introChars = buildWordmark(document.getElementById("wordmark"));
+  buildWordmark(document.getElementById("wordmark-small"));
+
+  var fromX = introChars.map(function (_, i) { return (rnd(i) - 0.5) * 360; });
+  var fromY = introChars.map(function (_, i) { return (rnd(i + 99) - 0.5) * 240; });
+  var fromR = introChars.map(function (_, i) { return (rnd(i + 17) - 0.5) * 60; });
+
+  var tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
+  window.__timelines = window.__timelines || {};
+  window.__timelines["hoocode-trailer"] = tl;
+
+  tl.addLabel("intro", 0)
+    .addLabel("mission", 5)
+    .addLabel("demo", 9)
+    .addLabel("outro", 36);
+
+  // Starfield drift across the trailer.
+  tl.to("#stars", { backgroundPosition: "-300px -160px", duration: 45, ease: "none" }, 0);
+  tl.to("#stars-far", { backgroundPosition: "-120px -60px", duration: 45, ease: "none" }, 0);
+
+  // ---- intro (0 to 5) ----
+  // Frame 0 is not empty: the intro scene starts visible, with the wordmark dim (opacity 0.35, near its final place) before it assembles.
+  tl.set("#scene-intro", { autoAlpha: 1 }, 0);
+  tl.fromTo(introChars,
+    { x: function (i) { return fromX[i]; }, y: function (i) { return fromY[i]; },
+      rotation: function (i) { return fromR[i]; }, opacity: 0.35, scale: 0.9 },
+    { x: 0, y: 0, rotation: 0, opacity: 1, scale: 1, duration: 0.9, ease: "back.out(1.7)",
+      stagger: { each: 0.03, from: "center" } },
+    "intro+=0.3");
+  // The name and the version line "type in": a stepped clip-path reveal, one step per character.
+  tl.fromTo("#brand-name", { clipPath: "inset(0% 100% 0% 0%)" },
+    { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, ease: "steps(7)" }, "intro+=1.2");
+  tl.fromTo("#brand-sub", { clipPath: "inset(0% 100% 0% 0%)" },
+    { clipPath: "inset(0% 0% 0% 0%)", duration: 1.8, ease: "steps(22)" }, "intro+=2.2");
+  tl.to("#scene-intro", { autoAlpha: 0, duration: 0.4 }, "intro+=4.6");
+
+  // ---- mission (5 to 9) ----
+  tl.to("#scene-mission", { autoAlpha: 1, duration: 0.4 }, "mission");
+  tl.fromTo("#mission-title", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, "mission+=0.1");
+  tl.fromTo("#mission-sub", { opacity: 0 }, { opacity: 1, duration: 0.6 }, "mission+=0.4");
+  // Countdown: T-3..T-0, each number on screen for ~0.8 s, from 5.5 s to 8.9 s.
+  var counts = document.querySelectorAll("#countdown span");
+  counts.forEach(function (span, i) {
+    var t = 5.5 + i * 0.9;
+    tl.fromTo(span, { opacity: 0, scale: 1.35 }, { opacity: 1, scale: 1, duration: 0.15 }, t);
+    tl.to(span, { opacity: 0, duration: 0.08 }, t + 0.82);
+  });
+  tl.to("#scene-mission", { autoAlpha: 0, duration: 0.25 }, 8.95);
+
+  // ---- demo (9 to 36) ----
+  // The <video> is driven by the runtime from its data-start; no media tween here.
+  tl.to("#scene-demo", { autoAlpha: 1, duration: 0.2 }, "demo");
+  tl.fromTo("#term", { y: 40, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "demo");
+  // Captions, in order (cue times: 01 14.6-20.4, 02 21.2-25.0, 03 25.6-35.4).
+  tl.fromTo("#cap-1", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 14.6);
+  tl.to("#cap-1", { autoAlpha: 0, duration: 0.3 }, 20.4);
+  tl.fromTo("#cap-2", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 21.2);
+  tl.to("#cap-2", { autoAlpha: 0, duration: 0.3 }, 25.0);
+  tl.fromTo("#cap-3", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 25.6);
+  tl.to("#cap-3", { autoAlpha: 0, duration: 0.3 }, 35.4);
+  tl.to("#scene-demo", { autoAlpha: 0, duration: 0.4 }, 35.6);
+
+  // ---- outro (36 to 45) ----
+  tl.to("#scene-outro", { autoAlpha: 1, duration: 0.4 }, 35.6);
+  tl.fromTo("#wordmark-small", { y: -30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "outro+=0.2");
+  tl.fromTo("#install-box", { y: 20, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "outro+=1.2");
+  tl.fromTo("#alt-install", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 }, "outro+=2.0");
+  tl.fromTo("#version", { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5 }, "outro+=2.6");
+  tl.fromTo("#tagline", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, "outro+=3.2");
+
+  // Pin the total length to 45s.
+  tl.set({}, {}, 45);
+})();
+</script>
+</body>
+</html>
