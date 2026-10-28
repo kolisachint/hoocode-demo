@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id":"name","type":"string","label":"Name","default":"hoocode","group":"Copy"},
+  {"id":"version","type":"string","label":"Version","default":"v0.2.20","group":"Copy"},
+  {"id":"verb1","type":"string","label":"Verb 1","default":"plans.","group":"Copy"},
+  {"id":"verb2","type":"string","label":"Verb 2","default":"asks.","group":"Copy"},
+  {"id":"verb3","type":"string","label":"Verb 3","default":"lands.","group":"Copy"},
+  {"id":"binaryA","type":"string","label":"Line 1","default":"one static binary","group":"Copy"},
+  {"id":"binaryB","type":"string","label":"Line 2","default":"any model provider","group":"Copy"},
+  {"id":"tagline","type":"string","label":"Tagline","default":"A terminal coding agent, written in Rust.","group":"Copy"},
+  {"id":"installA","type":"string","label":"Install prompt","default":"$ curl -fsSL","group":"Copy"},
+  {"id":"installB","type":"string","label":"Install URL","default":"https://kolisachint.github.io/hoocode/install.sh | sh","group":"Copy"},
+  {"id":"promise","type":"string","label":"Promise line","default":"nothing applied without your say-so.","group":"Copy"},
+  {"id":"bg","type":"color","label":"Background","default":"#09090B","group":"Colour"},
+  {"id":"ink","type":"color","label":"Ink","default":"#FAFAFA","group":"Colour"},
+  {"id":"muted","type":"color","label":"Muted","default":"#A1A1AA","group":"Colour"},
+  {"id":"rule","type":"color","label":"Rule","default":"#27272A","group":"Colour"},
+  {"id":"accent","type":"color","label":"Accent","default":"#00F0FF","group":"Colour"},
+  {"id":"gradA","type":"color","label":"Gradient start","default":"#5cc8bb","group":"Colour"},
+  {"id":"gradB","type":"color","label":"Gradient end","default":"#9b8cff","group":"Colour"}
+]'>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>hoocode · teaser 15s</title>
+<script src="vendor/gsap.min.js"></script>
+<style id="om-fonts">
+@font-face { font-family: "Inter"; src: url("assets/fonts/Inter-var.woff") format("woff"); font-weight: 100 900; font-style: normal; }
+@font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/jetbrains-mono-latin-400-normal.woff") format("woff"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/jetbrains-mono-latin-500-normal.woff") format("woff"); font-weight: 500; font-style: normal; }
+@font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/jetbrains-mono-latin-700-normal.woff") format("woff"); font-weight: 700; font-style: normal; }
+</style>
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  #film { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); color: var(--ink); font-family: "Inter", sans-serif; font-weight: 800; }
+  .abs { position: absolute; }
+  .mono { font-family: "JetBrains Mono", monospace; }
+
+  /* top frame bar */
+  #meta { left: 90px; right: 90px; top: 110px; height: 60px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 26px; font-weight: 500; color: var(--muted); letter-spacing: 1px; border-bottom: 2px solid var(--rule); padding-bottom: 18px; }
+
+  /* owl wordmark: 14 x 6 cells (7 glyph columns x 3 rows, each glyph split into 2x2 quadrants) */
+  #owl { left: 120px; top: 560px; width: 840px; height: 360px; transform-origin: 50% 0; }
+  #owl .px { position: absolute; border-radius: 0; }
+  #owl .px.ghost { background: #1d1d22; }
+  #scan { left: 120px; top: 560px; width: 840px; height: 4px; background: var(--accent); opacity: 0; box-shadow: 0 0 22px var(--accent); }
+
+  /* kinetic verbs */
+  .verb { left: 0; right: 0; top: 760px; text-align: center; font-size: 236px; line-height: 1; letter-spacing: -9px; font-weight: 900; opacity: 0; white-space: nowrap; }
+  .verb .dot { color: var(--accent); }
+  .count { left: 90px; top: 700px; font-size: 30px; color: var(--muted); letter-spacing: 2px; opacity: 0; }
+  #verbRule { left: 90px; right: 90px; top: 1090px; height: 2px; background: var(--rule); transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* binary lines */
+  #beatBinary { left: 0; top: 0; width: 1080px; height: 1920px; visibility: hidden; }
+  .line { left: 90px; right: 90px; font-size: 86px; line-height: 1.1; letter-spacing: -2.5px; font-weight: 800; white-space: nowrap; }
+  .line .inner { display: block; }
+  #l1 { top: 800px; color: var(--ink); }
+  #l2 { top: 920px; color: var(--muted); }
+  #binRule { left: 90px; top: 740px; width: 160px; height: 8px; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* closing card */
+  #name { left: 0; right: 0; top: 818px; text-align: center; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 128px; letter-spacing: -4px; opacity: 0; }
+  #ver { left: 0; right: 0; top: 996px; text-align: center; font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 30px; color: var(--accent); letter-spacing: 2px; opacity: 0; }
+  #tagline { left: 60px; right: 60px; top: 1090px; text-align: center; font-family: "JetBrains Mono", monospace; font-weight: 400; font-size: 34px; color: var(--muted); opacity: 0; white-space: nowrap; }
+  #install { left: 70px; right: 70px; top: 1200px; padding: 42px 44px; border: 2px solid var(--rule); border-radius: 14px; background: #0F0F12; opacity: 0; font-family: "JetBrains Mono", monospace; }
+  #install .a { display: block; font-size: 30px; font-weight: 500; color: var(--muted); }
+  #install .b { display: block; margin-top: 18px; font-size: 26px; font-weight: 500; color: var(--ink); white-space: nowrap; }
+  #install .b .cur { display: inline-block; width: 16px; height: 32px; background: var(--accent); vertical-align: -4px; margin-left: 2px; }
+  #promise { left: 60px; right: 60px; top: 1450px; text-align: center; font-size: 44px; font-weight: 500; color: var(--muted); letter-spacing: -0.5px; opacity: 0; }
+</style>
+</head>
+<body>
+<!--
+  huashu-motion contract (plain HTML + GSAP, all of it optional except the root and the timeline):
+  1. Editable values are composition variables on <html>; the studio inspector edits their defaults.
+  2. data-om-id names what people can point at; comments arrive with the id under the pointer.
+  3. Timeline labels "scene:<id>" become the studio's scene strip.
+  4. data-om-signature="off" on the root: no "Made with huashu-motion" line (this is a brand film, not a fan film).
+  No data-duration on the root: the film is as long as the timeline, which ends at 15 s.
+-->
+<div id="film" data-composition-id="film" data-width="1080" data-height="1920" data-fps="30" data-om-signature="off">
+
+  <!-- top frame bar (visible 0 – 11 s) -->
+  <div id="meta" class="abs mono" data-om-id="meta">
+    <span data-var-text="name">hoocode</span>
+    <span data-var-text="version">v0.2.20</span>
+  </div>
+
+  <!-- 0 – 3 s: the owl wordmark snaps in, row by row, behind a scan line -->
+  <div id="owl" class="abs" data-om-id="owl"></div>
+  <div id="scan" class="abs"></div>
+
+  <!-- 3 – 7 s: kinetic verbs -->
+  <div id="v1" class="abs verb" data-om-id="verb1" data-om-var="verb1"></div>
+  <div id="v2" class="abs verb" data-om-id="verb2" data-om-var="verb2"></div>
+  <div id="v3" class="abs verb" data-om-id="verb3" data-om-var="verb3"></div>
+  <div id="c1" class="abs count mono">01 / 03</div>
+  <div id="c2" class="abs count mono">02 / 03</div>
+  <div id="c3" class="abs count mono">03 / 03</div>
+  <div id="verbRule" class="abs"></div>
+
+  <!-- 7 – 11 s: one static binary · any model provider -->
+  <div id="beatBinary" class="abs">
+    <div id="binRule" class="abs"></div>
+    <div id="l1" class="abs line" data-om-id="binaryA"><span class="inner" data-om-var="binaryA"></span></div>
+    <div id="l2" class="abs line" data-om-id="binaryB"><span class="inner" data-om-var="binaryB"></span></div>
+  </div>
+
+  <!-- 11 – 15 s: wordmark, name, tagline, install line, promise -->
+  <div id="name" class="abs" data-om-id="name"><span data-var-text="name">hoocode</span></div>
+  <div id="ver" class="abs" data-om-id="version" data-var-text="version">v0.2.20</div>
+  <div id="tagline" class="abs mono" data-om-id="tagline" data-var-text="tagline">A terminal coding agent, written in Rust.</div>
+  <div id="install" class="abs" data-om-id="install">
+    <span class="a" data-var-text="installA">$ curl -fsSL</span>
+    <span class="b"><span id="typed"></span><span class="cur" id="cur"></span></span>
+  </div>
+  <div id="promise" class="abs" data-om-id="promise" data-var-text="promise">nothing applied without your say-so.</div>
+</div>
+
+<script>
+  const V = OM.vars();
+  const film = document.getElementById('film');
+  const $ = (s) => document.querySelector(s);
+
+  // ---- owl wordmark -------------------------------------------------------
+  // The brand glyph is three text rows of quadrant blocks. Each character is 2x2 quadrants,
+  // so the whole mark is a 14 x 6 cell grid (1 = filled). Decoded from:
+  //   ▟▀▀▀▀▀▙ / ▌▟▙ ▟▙▐ / ▜▄▄▄▄▄▛
+  const OWL = ['01111111111110', '11000000000011', '10011000011001', '10111100111101', '11000000000011', '01111111111110'];
+  const CELL = 60, GAP = 6, SIZE = CELL - GAP;
+  const owl = $('#owl');
+  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const GA = hex(V.gradA), GB = hex(V.gradB);
+  // colour follows the glyph column (7 columns), from gradA to gradB
+  const colourAt = (col) => {
+    const t = col / 6;
+    return `rgb(${GA.map((a, i) => Math.round(a + (GB[i] - a) * t)).join(',')})`;
+  };
+  // deterministic pseudo-random in 0..1 (no Math.random: the film is a pure function of time)
+  const rnd = (i) => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  const lit = [];
+  let idx = 0;
+  OWL.forEach((row, sr) => [...row].forEach((bit, sc) => {
+    if (bit !== '1') return;
+    const ghost = document.createElement('i');
+    ghost.className = 'px ghost';
+    Object.assign(ghost.style, { left: sc * CELL + 'px', top: sr * CELL + 'px', width: SIZE + 'px', height: SIZE + 'px' });
+    owl.appendChild(ghost);
+    const p = document.createElement('i');
+    p.className = 'px lit';
+    Object.assign(p.style, { left: sc * CELL + 'px', top: sr * CELL + 'px', width: SIZE + 'px', height: SIZE + 'px', background: colourAt(Math.floor(sc / 2)), opacity: 0 });
+    p.dataset.sr = sr;
+    p.dataset.k = idx++;
+    owl.appendChild(p);
+    lit.push(p);
+  }));
+
+  // ---- verbs: split each word's trailing full stop into the accent colour ---
+  const verbs = ['v1', 'v2', 'v3'].map((id) => document.getElementById(id));
+  const words = [V.verb1, V.verb2, V.verb3];
+  verbs.forEach((el, i) => {
+    const w = words[i];
+    const end = w.endsWith('.') ? '<span class="dot">.</span>' : '';
+    el.innerHTML = (end ? w.slice(0, -1) : w) + end;
+  });
+
+  // ---- binary lines ---------------------------------------------------------
+  document.querySelector('#l1 .inner').textContent = V.binaryA;
+  document.querySelector('#l2 .inner').textContent = V.binaryB;
+
+  // ---- timeline -------------------------------------------------------------
+  const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
+
+  // 0 – 3 s · owl snaps in
+  tl.addLabel('scene:mark', 0)
+    .fromTo('#meta', { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: .5 }, 0)
+    .fromTo('#scan', { opacity: 1, y: 0 }, { y: 360, duration: .75, ease: 'none' }, .2)
+    .to('#scan', { opacity: 0, duration: .12 }, .92);
+  // each row of cells lands as the scan line passes it
+  const rowTime = (sr) => .2 + (sr + .5) / 6 * .75;
+  lit.forEach((p) => {
+    const sr = +p.dataset.sr;
+    const t = rowTime(sr) - .02 + rnd(+p.dataset.k) * .05;
+    tl.fromTo(p, { opacity: 0, scale: .15, x: (rnd(+p.dataset.k + 9) - .5) * 60 },
+      { opacity: 1, scale: 1, x: 0, duration: .16, ease: 'expo.out' }, t);
+  });
+  // glitch: two bursts of horizontal jitter on a scattered subset of cells
+  const glitchA = lit.filter((p) => rnd(+p.dataset.k * 3.1) > .62);
+  const glitchB = lit.filter((p) => rnd(+p.dataset.k * 5.7) > .7);
+  tl.fromTo(glitchA, { x: 16 }, { x: 0, duration: .14, ease: 'steps(3)' }, 1.45)
+    .fromTo(glitchB, { x: -18, opacity: .35 }, { x: 0, opacity: 1, duration: .12, ease: 'steps(2)' }, 2.25)
+    .set('#owl', { opacity: 0 }, 3.0);
+
+  // 3 – 7 s · three verbs, each punches in and hard-cuts out
+  tl.addLabel('scene:verbs', 3.0)
+    .fromTo('#verbRule', { scaleX: 0 }, { scaleX: 1, duration: .45, ease: 'expo.inOut' }, 3.0);
+  const counts = ['#c1', '#c2', '#c3'];
+  verbs.forEach((el, i) => {
+    const t = 3.0 + i * 1.33;
+    tl.fromTo(el, { opacity: 0, scale: 1.34 }, { opacity: 1, scale: 1, duration: .2, ease: 'power4.out' }, t)
+      .fromTo(counts[i], { opacity: 0 }, { opacity: 1, duration: .05 }, t)
+      .set(el, { opacity: 0 }, i < 2 ? t + 1.2 : 7.0)
+      .set(counts[i], { opacity: 0 }, i < 2 ? t + 1.2 : 7.0);
+  });
+
+  // 7 – 11 s · one static binary · any model provider
+  tl.addLabel('scene:binary', 7.0)
+    .set('#beatBinary', { visibility: 'visible' }, 7.0)
+    .fromTo('#binRule', { scaleX: 0 }, { scaleX: 1, duration: .5, ease: 'expo.inOut' }, 7.0)
+    .fromTo('#l1 .inner', { opacity: 0, y: 46 }, { opacity: 1, y: 0, duration: .6, ease: 'expo.out' }, 7.12)
+    .fromTo('#l2 .inner', { opacity: 0, y: 46 }, { opacity: 1, y: 0, duration: .6, ease: 'expo.out' }, 7.32)
+    .set('#beatBinary', { visibility: 'hidden' }, 10.99)
+    .to('#meta', { opacity: 0, duration: .14, ease: 'power1.in' }, 10.86);
+
+  // 11 – 15 s · the closing card
+  tl.addLabel('scene:install', 11.0)
+    .set('#owl', { opacity: 1 }, 11.0)
+    .fromTo('#owl', { scale: 1 }, { scale: .6, duration: .85, ease: 'expo.inOut' }, 11.0)
+    .fromTo('#name', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .5 }, 11.7)
+    .fromTo('#ver', { opacity: 0 }, { opacity: 1, duration: .4 }, 11.95)
+    .fromTo('#tagline', { opacity: 0 }, { opacity: 1, duration: .5 }, 12.25)
+    .fromTo('#install', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: .45 }, 12.6);
+
+  // the install URL types out (a function of the timeline position, so seeks are exact)
+  const typed = { n: 0 };
+  const full = V.installB;
+  tl.fromTo(typed, { n: 0 }, { n: full.length, duration: .9, ease: 'none',
+      onUpdate: () => { document.getElementById('typed').textContent = full.slice(0, Math.round(typed.n)); } }, 12.95)
+    .set('#cur', { opacity: 0 }, 13.9)
+    .fromTo('#promise', { opacity: 0 }, { opacity: 1, duration: .6 }, 13.9)
+    .to({}, { duration: 0 }, 15.0); // pins the end of the film at 15 s
+
+  window.__timelines['film'] = tl;
+</script>
+</body>
+</html>
