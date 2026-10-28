@@ -205,9 +205,9 @@
   var introChars = buildWordmark(document.getElementById("wordmark"));
   buildWordmark(document.getElementById("wordmark-small"));
 
-  var fromX = introChars.map(function (_, i) { return (rnd(i) - 0.5) * 1400; });
-  var fromY = introChars.map(function (_, i) { return (rnd(i + 99) - 0.5) * 900; });
-  var fromR = introChars.map(function (_, i) { return (rnd(i + 17) - 0.5) * 240; });
+  var fromX = introChars.map(function (_, i) { return (rnd(i) - 0.5) * 360; });
+  var fromY = introChars.map(function (_, i) { return (rnd(i + 99) - 0.5) * 240; });
+  var fromR = introChars.map(function (_, i) { return (rnd(i + 17) - 0.5) * 60; });
 
   var tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
   window.__timelines = window.__timelines || {};
@@ -223,10 +223,11 @@
   tl.to("#stars-far", { backgroundPosition: "-120px -60px", duration: 45, ease: "none" }, 0);
 
   // ---- intro (0 to 5) ----
-  tl.to("#scene-intro", { autoAlpha: 1, duration: 0.2 }, "intro");
+  // Frame 0 is not empty: the intro scene starts visible, with the wordmark dim (opacity 0.35, near its final place) before it assembles.
+  tl.set("#scene-intro", { autoAlpha: 1 }, 0);
   tl.fromTo(introChars,
     { x: function (i) { return fromX[i]; }, y: function (i) { return fromY[i]; },
-      rotation: function (i) { return fromR[i]; }, opacity: 0, scale: 0.2 },
+      rotation: function (i) { return fromR[i]; }, opacity: 0.35, scale: 0.9 },
     { x: 0, y: 0, rotation: 0, opacity: 1, scale: 1, duration: 0.9, ease: "back.out(1.7)",
       stagger: { each: 0.03, from: "center" } },
     "intro+=0.3");
@@ -241,14 +242,14 @@
   tl.to("#scene-mission", { autoAlpha: 1, duration: 0.4 }, "mission");
   tl.fromTo("#mission-title", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, "mission+=0.1");
   tl.fromTo("#mission-sub", { opacity: 0 }, { opacity: 1, duration: 0.6 }, "mission+=0.4");
-  // Countdown: one number per second, each fading before the next.
+  // Countdown: T-3..T-0, each number on screen for ~0.8 s, from 5.5 s to 8.9 s.
   var counts = document.querySelectorAll("#countdown span");
   counts.forEach(function (span, i) {
-    var t = 5 + i;
-    tl.fromTo(span, { opacity: 0, scale: 1.35 }, { opacity: 1, scale: 1, duration: 0.25 }, t);
-    tl.to(span, { opacity: 0, duration: 0.2 }, t + 0.8);
+    var t = 5.5 + i * 0.9;
+    tl.fromTo(span, { opacity: 0, scale: 1.35 }, { opacity: 1, scale: 1, duration: 0.15 }, t);
+    tl.to(span, { opacity: 0, duration: 0.08 }, t + 0.82);
   });
-  tl.to("#scene-mission", { autoAlpha: 0, duration: 0.4 }, "mission+=3.6");
+  tl.to("#scene-mission", { autoAlpha: 0, duration: 0.25 }, 8.95);
 
   // ---- demo (9 to 36) ----
   // The <video> is driven by the runtime from its data-start; no media tween here.
