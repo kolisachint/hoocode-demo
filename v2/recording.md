@@ -50,78 +50,46 @@ Path shown on screen: the startup header and HUD print the working folder. Copy 
 `/home/user/hoocode-demo/recording/sample-repo` (verify on the first take; if the TUI does not
 abbreviate `$HOME`, use `/tmp/toolbox`).
 
-## 3. VHS tape: `v2/recording/hoocode-v2.tape`
+## 3. Recording pipeline: asciinema, then xterm.js
 
-Start from `recording/hoocode.tape`. Changes:
+The take is recorded as an asciinema cast, then rendered to 4K frames. VHS (the first v2 take)
+could not keep up: the clip played about 1.5x too fast at 25 fps and was capped at 1080p, so
+punch-in zooms were soft. The cast keeps real timing (the bytes the terminal received, when they
+arrived), and the render is 30 fps at 3840x2160. Steps (commands in `v2/recording/README.md`):
 
-```
-Output out/v2/hoocode-v2.mp4
+1. **Record.** `v2/recording/record_cast.py` starts a detached tmux pane sized 117x32 running
+   `asciinema rec --cols 117 --rows 32 -c "bash --rcfile v2/recording/cast-rc.sh -i"`. The rc file
+   sets `TERM=xterm-256color`, `COLORTERM=truecolor`, `PS1='$ '`, `SCENARIO` (v2), `TOOLBOX=1` and the
+   `hoocode` function (`recording/run-mock.sh`). It is sourced before asciinema starts recording, so
+   setup (`reset-sample.sh`, `cd`, the function) is never in the cast; the first frame is a clean
+   `$ ` prompt. The driver follows the tape's script: 1 s idle, the command typed at 45 ms per
+   character (scheduled, so send-keys overhead does not drift), then holds and waits on screen text
+   (`tmux capture-pane`). The scenario holds the red beat: `delay_s` 2.5 on turn 5 (the fix text) and
+   1.0 on turn 8 (the summary). After `LANDED` it holds 3 s; a static screen writes no cast event,
+   so the driver appends an empty event at LANDED + 3 s to keep the hold.
+2. **Render.** `v2/recording/render_cast.mjs` (node, playwright, xterm.js 6.0.0 with the WebGL addon,
+   both MIT, vendored in `v2/recording/vendor/`) steps frame i at t = i/30: it writes every cast event
+   with timestamp <= t, awaits each write, and takes a PNG screenshot of the 3840x2160 page. The
+   page uses JetBrains Mono (the teaser's woff, 400 and 700) and the tape's `Set Theme` colours on
+   #09090B. Duration = last event + 0.5 s, rounded up to whole frames. ffmpeg encodes
+   `out/v2/hoocode-v2-4k.mp4` (libx264, crf 14, slow, yuv420p, 30 fps) and `out/v2/hoocode-v2.mp4`
+   (1920x1080, lanczos, crf 16). The render also writes `v2/recording/cues.json`: each cue is the
+   first cast event after which the visible buffer matches (exact, not OCR).
+3. **Geometry.** xterm refuses `lineHeight` below 1, and its cell is ~1.32 em tall. At lineHeight 1,
+   32 rows need a font at or below ~49 px (a 53.7 px font gives 2272 px of rows in a 2160 px frame).
+   So the rows fill the height: font 49.2 px, cell 29 x 65 px, grid 3393 x 2080, centred (36 px top
+   and bottom). The 117 columns therefore span about 88% of the width, not the 3768 px planned. The
+   zoom rects must be re-checked against this grid (the row fractions in `cues.json` are the reference).
 
-Set Shell "bash"
-Set FontFamily "JetBrains Mono"   # check: fc-list | grep -i "JetBrains Mono"
-Set FontSize 40
-Set LineHeight 1.2
-Set Width 2880
-Set Height 1620
-Set Padding 36
-Set Framerate 30
-Set TypingSpeed 45ms
-Set CursorBlink false
-# no WindowBar line (v1 used "Colorful": traffic lights are not brand)
-Set Theme { ...same as v1 (background #09090B, cursor #00F0FF)... }
-```
-
-This gives about 117 columns x 32 rows, the same grid as v1 (118 x 33), so the layout matches v1's
-frames at 1.8x the pixels. Downscaled to 1920x1080, text is ~27 px. If VHS holds 30 fps at
-3840x2160 / FontSize 53 (check: output duration equals the sum of the tape's waits), that is better
-still; then all punch-ins are lossless. Do not change the column count: the films' zoom rects assume
-~117 columns.
-
-Script (after the hidden setup of v1, with `SCENARIO=../../v2/recording/scenario.json` exported in the
-hidden part):
-
-```
-Show
-Sleep 1s
-Type 'hoocode "Add a --json flag to the stats command"'
-Sleep 500ms
-Enter
-
-Wait+Screen@60s /TodoWrite\s+4 items/
-Sleep 2s
-
-Wait+Screen@60s /BUILD asks for Edit/          # card 1
-Sleep 2500ms
-Type "y"
-Sleep 1s
-
-Wait+Screen@90s /BUILD asks for Shell/         # card 2
-Sleep 2500ms
-Type "a"
-
-Wait+Screen@180s /exit 101/                    # red
-Sleep 2s
-
-Wait+Screen@60s /BUILD asks for Edit/          # card 3 (the fix)
-Sleep 1500ms
-Type "y"
-
-Wait+Screen@180s /exit 0\b/                    # green, no card
-Sleep 1500ms
-Wait+Screen@120s /LANDED/
-Sleep 3s
-```
-
-End the tape there (no `Ctrl+D`: it opens the end-of-shift card, which no film uses). The Sleeps are
-deliberate holds: the edit freezes or trims them. Expected clip length: about 32 s.
+The VHS tape `v2/recording/hoocode-v2.tape` stays as a fallback (same scenario, same settings; its
+timing is not faithful, see above). The VHS take is kept as `out/v2/hoocode-v2-vhs.mp4`.
 
 ## 4. Cues
 
-After recording, step through the clip (`ffmpeg -ss <t> -i out/v2/hoocode-v2.mp4 -frames:v 1 ...`, or
-OCR every 0.1 s) and record the **first frame** where each string is fully drawn, in clip seconds, to
-`v2/recording/cues.json` (`{"TUI": 1.43, "PLAN": 5.97, ...}`). Every film doc refers to these names.
-Also note the y of the cue's text row as a fraction of frame height (`"PLAN_y": 0.71`): the zoom rects
-anchor on it.
+The render (§3) writes `v2/recording/cues.json` from the terminal buffer: each time is the first cast
+event after which the string is drawn (exact, no OCR). Every film doc refers to these names. Each
+cue also has `"<NAME>_y"`, the row centre as a fraction of the 4K frame height (padding included); the
+zoom rects anchor on it. `HIT_visible_s` is how long the red step stays on screen (`HIT_END` - `HIT`).
 
 | Cue | Screen string (regex) | Where on screen | Source of the string |
 |---|---|---|---|
@@ -138,7 +106,8 @@ anchor on it.
 | `ALWAYS` | `always cargo in this session` | card keys row | `clearance_card.rs` (`always {program} in this session`) |
 | `A2` | first frame with card 2 gone | | |
 | `HIT` | ` HIT ` chip and `exit 101` on step 04's header | transcript, right edge | `trajectory.rs` `hit_chip`; `tool_execution.rs` |
-| `FAILED` | `test result: FAILED` | step 04 body | cargo |
+| `EXIT101` | `exit 101` on step 04's header (right edge; the red step) | transcript, right edge | `tool_execution.rs` |
+| `HIT_END` | first frame with `exit 101` gone (the step scrolls off) | | |
 | `FIXTEXT` | `The JSON has spaces` | transcript | scenario turn 5 |
 | `CARD3` | `BUILD asks for Edit` (second) | clearance card | |
 | `Y3` | first frame with card 3 gone | | |

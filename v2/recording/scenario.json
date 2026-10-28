@@ -1,0 +1,177 @@
+{
+  "description": "v2 launch films: README demo, scripted: `hoocode \"Add a --json flag to the stats command\"` in demo/sample-repo. The model plans with TodoWrite (no approval), reads the file (no approval), edits src/main.rs (approval), runs cargo test through Shell (approval), marks the plan done and answers. Only the model is scripted: the Edit and Shell calls run for real. Run by demo/run-mock.sh; format follows scripts/demo/demo.json.",
+  "model": {
+    "provider": "demo",
+    "id": "scripted-demo",
+    "name": "Scripted demo model"
+  },
+  "prepare": [
+    [
+      "cargo",
+      "test",
+      "--quiet",
+      "--no-run"
+    ]
+  ],
+  "llm": [
+    {
+      "text": "Plan: read the `stats` command, add `--json` with a unit test, then run `cargo test`. The edit and the test run each wait for your clearance.",
+      "tool_calls": [
+        {
+          "id": "call_todo_1",
+          "name": "TodoWrite",
+          "arguments": {
+            "todos": [
+              {
+                "content": "Read the stats command in src/main.rs",
+                "status": "in_progress",
+                "activeForm": "Reading the stats command"
+              },
+              {
+                "content": "Add a --json flag that prints the counts as JSON",
+                "status": "pending",
+                "activeForm": "Adding the --json flag"
+              },
+              {
+                "content": "Cover the JSON output with a unit test",
+                "status": "pending",
+                "activeForm": "Adding the JSON test"
+              },
+              {
+                "content": "Run cargo test",
+                "status": "pending",
+                "activeForm": "Running cargo test"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "Reading the file first.",
+      "tool_calls": [
+        {
+          "id": "call_read_1",
+          "name": "Read",
+          "arguments": {
+            "path": "src/main.rs"
+          }
+        }
+      ]
+    },
+    {
+      "text": "I'll add a `to_json` helper, a `--json` flag and a test for the JSON line.",
+      "tool_calls": [
+        {
+          "id": "call_edit_1",
+          "name": "Edit",
+          "arguments": {
+            "path": "src/main.rs",
+            "edits": [
+              {
+                "oldText": "fn usage() -> ! {\n    eprintln!(\"usage: toolbox stats <file>\");",
+                "newText": "/// The counts as one line of JSON, e.g. `{\"lines\":2,\"words\":3}`.\npub fn to_json(counts: &Counts) -> String {\n    format!(\"{{\\\"lines\\\": {}, \\\"words\\\": {}}}\", counts.lines, counts.words)\n}\n\nfn usage() -> ! {\n    eprintln!(\"usage: toolbox stats [--json] <file>\");"
+              },
+              {
+                "oldText": "fn run_stats(path: &str) {",
+                "newText": "fn run_stats(path: &str, json: bool) {"
+              },
+              {
+                "oldText": "    println!(\"lines: {}\", counts.lines);\n    println!(\"words: {}\", counts.words);",
+                "newText": "    if json {\n        println!(\"{}\", to_json(&counts));\n    } else {\n        println!(\"lines: {}\", counts.lines);\n        println!(\"words: {}\", counts.words);\n    }"
+              },
+              {
+                "oldText": "    if args.len() == 2 && args[0] == \"stats\" {\n        run_stats(&args[1]);\n    } else {",
+                "newText": "    let json = args.iter().any(|a| a == \"--json\");\n    let rest: Vec<&String> = args.iter().filter(|a| *a != \"--json\").collect();\n    if rest.len() == 2 && rest[0] == \"stats\" {\n        run_stats(rest[1], json);\n    } else {"
+              },
+              {
+                "oldText": "        assert_eq!(count(\"one two\\nthree\\n\"), Counts { lines: 2, words: 3 });\n    }",
+                "newText": "        assert_eq!(count(\"one two\\nthree\\n\"), Counts { lines: 2, words: 3 });\n    }\n\n    #[test]\n    fn formats_counts_as_json() {\n        let counts = Counts { lines: 2, words: 3 };\n        assert_eq!(to_json(&counts), \"{\\\"lines\\\":2,\\\"words\\\":3}\");\n    }"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "Running the tests.",
+      "tool_calls": [
+        {
+          "id": "call_shell_1",
+          "name": "Shell",
+          "arguments": {
+            "command": "cargo test --quiet"
+          }
+        }
+      ]
+    },
+    {
+      "text": "The JSON has spaces after the colons; the test expects the compact form. Fixing `to_json`.",
+      "tool_calls": [
+        {
+          "id": "call_edit_2",
+          "name": "Edit",
+          "arguments": {
+            "path": "src/main.rs",
+            "edits": [
+              {
+                "oldText": "format!(\"{{\\\"lines\\\": {}, \\\"words\\\": {}}}\"",
+                "newText": "format!(\"{{\\\"lines\\\":{},\\\"words\\\":{}}}\""
+              }
+            ]
+          }
+        }
+      ],
+      "delay_s": 2.5
+    },
+    {
+      "text": "Running them again.",
+      "tool_calls": [
+        {
+          "id": "call_shell_2",
+          "name": "Shell",
+          "arguments": {
+            "command": "cargo test --quiet"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Tests pass. Marking the plan done.",
+      "tool_calls": [
+        {
+          "id": "call_todo_2",
+          "name": "TodoWrite",
+          "arguments": {
+            "todos": [
+              {
+                "content": "Read the stats command in src/main.rs",
+                "status": "completed",
+                "activeForm": "Reading the stats command"
+              },
+              {
+                "content": "Add a --json flag that prints the counts as JSON",
+                "status": "completed",
+                "activeForm": "Adding the --json flag"
+              },
+              {
+                "content": "Cover the JSON output with a unit test",
+                "status": "completed",
+                "activeForm": "Adding the JSON test"
+              },
+              {
+                "content": "Run cargo test",
+                "status": "completed",
+                "activeForm": "Running cargo test"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "Added `--json` to `toolbox stats`. It prints `{\"lines\":N,\"words\":N}` instead of the two lines, and `to_json` has a unit test. `cargo test` passes with 2 tests.",
+      "delay_s": 1.0
+    }
+  ]
+}
